@@ -1,50 +1,34 @@
-import Routes.{Airport, buildGraph, groupAirports}
+import Routes.{Airport, buildGraph}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
-import scala.collection.mutable
+import scala.util.{Failure, Success}
 
 class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
 
-  val graph: Map[Airport, Seq[Routes.Route]] = buildGraph(Routes.providedRoutes)
+  "SSSP" should "create the topological order successfully" in {
+    val graph: Map[Airport, Seq[Routes.Route]] = buildGraph(Routes.providedRoutes)
 
-  // Map[Airport, amount of routes that have this airport as arrival].
-  // It could be the graph instead of the routes.
-  val initialAmountArrivalConnections: Map[Airport, Int] = groupAirports(Routes.providedRoutes)
-    .map(airport => (airport, Routes.providedRoutes.count(_.arrival == airport))).toMap
+    val topologicalOrder = SingleSourceShortestPath.createTopologicalOrder(graph)
 
-  // A mutable Map[Airport, amount of routes that have this airport as arrival]
-  // used to track the the decrement of connections while topological order is being created.
-  val mutableAmountArrivalConnections: mutable.Map[Airport, Int] = mutable.Map.from(initialAmountArrivalConnections)
-
-  // Initiate with airports that are not arrival of any route
-  var airportsToProcess: mutable.Queue[Airport] = mutable.Queue.from(initialAmountArrivalConnections.filter(_._2 == 0).keys)
-
-  var topologicalOrder: Seq[Airport] = Seq()
-
-  while (airportsToProcess.nonEmpty) {
-    val airport = airportsToProcess.dequeue()
-    topologicalOrder = topologicalOrder :+ airport
-
-    graph.get(airport).foreach(_.foreach { route =>
-      // decrease number of routes that are connected current airport
-      // since it was 'removed' from the list of nodes that still needs to be processed.
-      mutableAmountArrivalConnections.put(route.arrival, mutableAmountArrivalConnections(route.arrival) - 1)
-
-      // add airport to process list when it no longer has routes to it.
-      if (mutableAmountArrivalConnections(route.arrival) == 0) {
-        airportsToProcess.enqueue(route.arrival)
-      }
-    })
+    topologicalOrder.isSuccess should be(true)
   }
 
-  "SSSP" should "create the topological order" in {
-    topologicalOrder.head should be(Airport("DUB"))
-    topologicalOrder.last should be(Airport("SYD"))
+  it should "create topological order with DUB as the first and SYD as the last given the provided routes" in {
+    val graph: Map[Airport, Seq[Routes.Route]] = buildGraph(Routes.providedRoutes)
+
+    val topologicalOrder = SingleSourceShortestPath.createTopologicalOrder(graph)
+
+    topologicalOrder match {
+      case Success(topOrder) =>
+        topOrder.head should be(Airport("DUB"))
+        topOrder.last should be(Airport("SYD"))
+      case Failure(_) => fail()
+    }
   }
 
-  it should "detected cycles while building topological order" in {
+  it should "detect cycles while building topological order" in {
     pending
   }
 

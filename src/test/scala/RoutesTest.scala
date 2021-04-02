@@ -11,4 +11,8 @@ class RoutesTest extends AnyFlatSpec with Matchers {
     // 9 departure airports
     graph should have size 10
   }
+
+  it should "group airports for removing duplications" in {
+    Routes.groupAirports(Routes.providedRoutes) should have size 10
+  }
 }
