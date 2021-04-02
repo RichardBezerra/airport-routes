@@ -1,23 +1,27 @@
 object Routes {
-  case class Airport(iataCode: String)
-  case class DepartureAirport(override val iataCode: String) extends Airport(iataCode)
-  case class ArrivalAirport(override val iataCode: String) extends Airport(iataCode)
-  case class Route(departureAirport: DepartureAirport, arrivalAirport: ArrivalAirport, durationHours: Int)
 
-  val providedRoutes = Set(
-    Route(DepartureAirport("DUB"), ArrivalAirport("LHR"), 1),
-    Route(DepartureAirport("DUB"), ArrivalAirport("CDG"), 2),
-    Route(DepartureAirport("CDG"), ArrivalAirport("BOS"), 6),
-    Route(DepartureAirport("CDG"), ArrivalAirport("BKK"), 9),
-    Route(DepartureAirport("ORD"), ArrivalAirport("LAS"), 2),
-    Route(DepartureAirport("LHR"), ArrivalAirport("NYC"), 5),
-    Route(DepartureAirport("NYC"), ArrivalAirport("LAS"), 3),
-    Route(DepartureAirport("BOS"), ArrivalAirport("LAX"), 4),
-    Route(DepartureAirport("LHR"), ArrivalAirport("BKK"), 9),
-    Route(DepartureAirport("BKK"), ArrivalAirport("SYD"), 11),
-    Route(DepartureAirport("LAX"), ArrivalAirport("LAS"), 2),
-    Route(DepartureAirport("DUB"), ArrivalAirport("ORD"), 6),
-    Route(DepartureAirport("LAX"), ArrivalAirport("SYD"), 13),
-    Route(DepartureAirport("LAS"), ArrivalAirport("SYD"), 14),
+  case class Airport(iataCode: String)
+
+  case class Route(departure: Airport, arrival: Airport, durationHours: Int)
+
+  val providedRoutes = Seq(
+    Route(Airport("DUB"), Airport("LHR"), 1),
+    Route(Airport("DUB"), Airport("CDG"), 2),
+    Route(Airport("CDG"), Airport("BOS"), 6),
+    Route(Airport("CDG"), Airport("BKK"), 9),
+    Route(Airport("ORD"), Airport("LAS"), 2),
+    Route(Airport("LHR"), Airport("NYC"), 5),
+    Route(Airport("NYC"), Airport("LAS"), 3),
+    Route(Airport("BOS"), Airport("LAX"), 4),
+    Route(Airport("LHR"), Airport("BKK"), 9),
+    Route(Airport("BKK"), Airport("SYD"), 11),
+    Route(Airport("LAX"), Airport("LAS"), 2),
+    Route(Airport("DUB"), Airport("ORD"), 6),
+    Route(Airport("LAX"), Airport("SYD"), 13),
+    Route(Airport("LAS"), Airport("SYD"), 14),
   )
+
+  def buildGraph(routes: Seq[Routes.Route]): Seq[(Airport, Seq[Routes.Route])] = {
+    routes.map(_.departure).distinct.map(dep => (dep, routes.filter(_.departure == dep)))
+  }
 }
