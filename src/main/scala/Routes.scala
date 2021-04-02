@@ -1,5 +1,3 @@
-import scala.collection.IterableOnce.iterableOnceExtensionMethods
-
 object Routes {
 
   case class Airport(iataCode: String)
@@ -23,17 +21,11 @@ object Routes {
     Route(Airport("LAS"), Airport("SYD"), 14)
   )
 
-  def retrieveAirports(routes: Seq[Routes.Route]): Set[Airport] = {
+  def groupAirports(routes: Seq[Routes.Route]): Set[Airport] = {
     (routes.map(_.departure) :++ routes.map(_.arrival)).toSet
   }
 
   def buildGraph(routes: Seq[Routes.Route]): Map[Airport, Seq[Routes.Route]] = {
-    routes.map(_.departure).distinct.map(dep => dep -> routes.filter(_.departure == dep)).toMap
-  }
-
-  def buildDegreesTracking(graph: Map[Airport, Seq[Routes.Route]]): Seq[(Airport, Int)] = {
-    // traverse 'graph' rather than 'providedRoutes'
-    retrieveAirports(providedRoutes)
-      .map(airport => (airport, providedRoutes.count(_.arrival == airport))).toSeq
+    groupAirports(routes).map(dep => dep -> routes.filter(_.departure == dep)).toMap
   }
 }
