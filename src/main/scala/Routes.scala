@@ -18,10 +18,14 @@ object Routes {
     Route(Airport("LAX"), Airport("LAS"), 2),
     Route(Airport("DUB"), Airport("ORD"), 6),
     Route(Airport("LAX"), Airport("SYD"), 13),
-    Route(Airport("LAS"), Airport("SYD"), 14),
+    Route(Airport("LAS"), Airport("SYD"), 14)
   )
 
-  def buildGraph(routes: Seq[Routes.Route]): Seq[(Airport, Seq[Routes.Route])] = {
-    routes.map(_.departure).distinct.map(dep => (dep, routes.filter(_.departure == dep)))
+  def groupAirports(routes: Seq[Routes.Route]): Set[Airport] = {
+    (routes.map(_.departure) :++ routes.map(_.arrival)).toSet
+  }
+
+  def buildGraph(routes: Seq[Routes.Route]): Map[Airport, Seq[Routes.Route]] = {
+    groupAirports(routes).map(dep => dep -> routes.filter(_.departure == dep)).toMap
   }
 }
