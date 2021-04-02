@@ -16,7 +16,8 @@ object SingleSourceShortestPath {
     val mutableAmountArrivalConnections: mutable.Map[Airport, Int] = mutable.Map.from(initialAmountArrivalConnections)
 
     // Initiate with airports that are not arrival of any route
-    var airportsToProcess: mutable.Queue[Airport] = mutable.Queue.from(initialAmountArrivalConnections.filter(_._2 == 0).keys)
+    val airportsToProcess: mutable.Queue[Airport] =
+      mutable.Queue.from(initialAmountArrivalConnections.filter(_._2 == 0).keys)
 
     var topologicalOrder: Seq[Airport] = Seq()
 
@@ -38,5 +39,4 @@ object SingleSourceShortestPath {
 
     Success(topologicalOrder)
   }
-
 }

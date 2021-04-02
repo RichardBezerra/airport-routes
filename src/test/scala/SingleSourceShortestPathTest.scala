@@ -7,7 +7,7 @@ import scala.util.{Failure, Success}
 
 class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
 
-  "SSSP" should "create the topological order successfully" in {
+  "Single Source Shortest Path" should "create the topological order successfully when it receives a DAG" in {
     val graph: Map[Airport, Seq[Routes.Route]] = buildGraph(Routes.providedRoutes)
 
     val topologicalOrder = SingleSourceShortestPath.createTopologicalOrder(graph)
@@ -15,7 +15,7 @@ class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
     topologicalOrder.isSuccess should be(true)
   }
 
-  it should "create topological order with DUB as the first and SYD as the last given the provided routes" in {
+  it should "create a topological order with DUB as the first and SYD as the last given the provided routes" in {
     val graph: Map[Airport, Seq[Routes.Route]] = buildGraph(Routes.providedRoutes)
 
     val topologicalOrder = SingleSourceShortestPath.createTopologicalOrder(graph)
