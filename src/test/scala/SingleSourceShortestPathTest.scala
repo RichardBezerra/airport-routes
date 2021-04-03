@@ -7,7 +7,7 @@ import scala.util.{Failure, Success}
 
 class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
 
-  "Single Source Shortest Path" should "create the topological order successfully when it receives a DAG" in {
+  "Single Source Shortest Path" should "create a topological order successfully when it receives a DAG" in {
     val topologicalOrder = SingleSourceShortestPath.createTopologicalOrder(Routes.providedRoutes)
 
     topologicalOrder.isSuccess should be(true)
@@ -32,8 +32,19 @@ class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
     topologicalOrder.isFailure should be(true)
   }
 
-  it should "return routes when arrival airport is reachable" in {
-    pending
+  it should "return a Single Shortest Path from LAX" in {
+    val graph = Routes.buildGraph(Routes.providedRoutes)
+
+    val topologicalOrder = SingleSourceShortestPath.createTopologicalOrder(Routes.providedRoutes)
+
+    val sssp = topologicalOrder.map(SingleSourceShortestPath.createSSSP(graph, _, Airport("DUB"))).get
+
+    sssp.last match {
+      case (Airport(airport), hours) =>
+        airport should be("SYD")
+        hours should be(Some(21))
+      case _ => fail()
+    }
   }
 
   it should "not return routes when arrival airport is unreachable" in {

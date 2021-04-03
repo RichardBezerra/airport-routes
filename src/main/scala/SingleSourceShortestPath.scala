@@ -49,4 +49,38 @@ object SingleSourceShortestPath {
       Failure(new InvalidParameterException("informed routes contain routes that end up in a graph with cycles"))
     }
   }
+
+  def createSSSP(graph: Map[Airport, Seq[Routes.Route]],
+                 topologicalOrder: Seq[Airport],
+                 source: Airport): Seq[(Airport, Option[Int])] = {
+
+    val hoursTracking: mutable.ArraySeq[(Airport, Option[Int])] =
+      mutable.ArraySeq.from(topologicalOrder.map((_, None)))
+
+    hoursTracking(topologicalOrder.indexOf(source)) = (source, Some(0))
+
+    for (airport <- topologicalOrder) {
+
+      val airportIndexAtTopOrder = topologicalOrder.indexOf(airport)
+
+      graph(airport).foreach { route =>
+
+        hoursTracking(airportIndexAtTopOrder)._2.foreach { durationAtCurrentAirport =>
+
+          val arrivalAirportIndexAtTopOrder = topologicalOrder.indexOf(route.arrival)
+
+          val newDuration = durationAtCurrentAirport + route.durationHours
+
+          hoursTracking(arrivalAirportIndexAtTopOrder)._2 match {
+            case Some(durationAtArrival) =>
+              hoursTracking(arrivalAirportIndexAtTopOrder) = (route.arrival, Some(Math.min(durationAtArrival, newDuration)))
+            case None =>
+              hoursTracking(arrivalAirportIndexAtTopOrder) = (route.arrival, Some(newDuration))
+          }
+        }
+      }
+    }
+
+    hoursTracking.toSeq
+  }
 }
