@@ -74,7 +74,7 @@ object SingleSourceShortestPath {
    */
   def createSSSP(graph: Map[Airport, Seq[Routes.Route]],
                  topologicalOrder: Seq[Airport],
-                 departure: Airport): Seq[(Airport, Option[Seq[Routes.Route]])] = {
+                 departure: Airport): Seq[(Airport, Seq[Routes.Route])] = {
 
     // initiate an array to track the hours from source to each airport
     val hoursTracking: mutable.ArraySeq[(Airport, Option[Seq[Routes.Route]])] =
@@ -111,7 +111,7 @@ object SingleSourceShortestPath {
       }
     }
 
-    hoursTracking.toSeq
+    hoursTracking.toSeq.map(ht => (ht._1, ht._2.getOrElse(Seq())))
   }
 
   /**
@@ -142,7 +142,7 @@ object SingleSourceShortestPath {
 
     createTopologicalOrder(routes)
       .map(topOrder => createSSSP(graph, topOrder, departure).take(topOrder.indexOf(arrival) + 1).last)
-      .map(_._2.get)
+      .map(_._2)
       .filter(_.nonEmpty)
       .orElse(Failure(NoRoutesFound))
   }
