@@ -74,13 +74,13 @@ object SingleSourceShortestPath {
    */
   def createSSSP(graph: Map[Airport, Seq[Routes.Route]],
                  topologicalOrder: Seq[Airport],
-                 departure: Airport): Seq[(Airport, Option[Int])] = {
+                 departure: Airport): Seq[(Airport, Option[Int], Seq[Routes.Route])] = {
 
     // initiate an array to track the hours from source to each airport
-    val hoursTracking: mutable.ArraySeq[(Airport, Option[Int])] =
-      mutable.ArraySeq.from(topologicalOrder.map((_, None)))
+    val hoursTracking: mutable.ArraySeq[(Airport, Option[Int], Seq[Routes.Route])] =
+      mutable.ArraySeq.from(topologicalOrder.map((_, None, Seq())))
 
-    hoursTracking(topologicalOrder.indexOf(departure)) = (departure, Some(0))
+    hoursTracking(topologicalOrder.indexOf(departure)) = (departure, Some(0), Seq())
 
     for (airport <- topologicalOrder) {
 
@@ -97,9 +97,13 @@ object SingleSourceShortestPath {
           // update each airport with minimum duration from the source
           hoursTracking(arrivalAirportIndexAtTopOrder)._2 match {
             case Some(durationAtArrival) =>
-              hoursTracking(arrivalAirportIndexAtTopOrder) = (route.arrival, Some(Math.min(durationAtArrival, newDuration)))
+              if (newDuration < durationAtArrival) {
+                hoursTracking(arrivalAirportIndexAtTopOrder) = (route.arrival,
+                  Some(newDuration), hoursTracking(airportIndexAtTopOrder)._3 :+ route)
+              }
             case None =>
-              hoursTracking(arrivalAirportIndexAtTopOrder) = (route.arrival, Some(newDuration))
+              hoursTracking(arrivalAirportIndexAtTopOrder) = (route.arrival,
+                Some(newDuration), hoursTracking(airportIndexAtTopOrder)._3 :+ route)
           }
         }
       }
@@ -118,7 +122,7 @@ object SingleSourceShortestPath {
    */
   def findShortestPath(departure: Airport,
                        arrival: Airport,
-                       routes: Seq[Routes.Route]): Try[Seq[(Airport, Option[Int])]] = {
+                       routes: Seq[Routes.Route]): Try[Seq[(Airport, Option[Int], Seq[Routes.Route])]] = {
 
     if (!Routes.groupAirports(routes).contains(departure)) {
       return Failure(InvalidAirport)
