@@ -8,7 +8,15 @@ object SingleSourceShortestPath {
   case object InvalidDagCyclesFound extends Throwable
   case object DepartureEqualToArrival extends Throwable
   case object NoRoutesFound extends Throwable
+  case object InvalidAirport extends Throwable
 
+  /**
+   * Creates a topological order representation of the graph that is generated from the provided routes.
+   * @param routes that will be transformed to a graph.
+   * @return a sequence of airports that represents the topological order
+   *         of the graph if the graph is a Directed Acyclic Graph (DAG).
+   *         Otherwise, a failure if graph is not a DAG.
+   */
   def createTopologicalOrder(routes: Seq[Routes.Route]): Try[Seq[Airport]] = {
     val graph = Routes.buildGraph(routes)
 
@@ -53,10 +61,22 @@ object SingleSourceShortestPath {
     }
   }
 
+
+
+  /**
+   * Creates the Single Source Shortest Path (SSP) from the topological order provided.
+   * @param graph that will be used to check the hours in order to build the shortest duration
+   *              from the departure to all arrival airports.
+   * @param topologicalOrder which sequence will be used to generate the SSSP.
+   * @param departure airport. The 'source' of SSSP.
+   * @return sequence of tuple as (Airport, Hours distant from the source)
+   *         in same order as topological order.
+   */
   def createSSSP(graph: Map[Airport, Seq[Routes.Route]],
                  topologicalOrder: Seq[Airport],
                  departure: Airport): Seq[(Airport, Option[Int])] = {
 
+    // initiate an array to track the hours from source to each airport
     val hoursTracking: mutable.ArraySeq[(Airport, Option[Int])] =
       mutable.ArraySeq.from(topologicalOrder.map((_, None)))
 
@@ -74,6 +94,7 @@ object SingleSourceShortestPath {
 
           val newDuration = durationAtCurrentAirport + route.durationHours
 
+          // update each airport with minimum duration from the source
           hoursTracking(arrivalAirportIndexAtTopOrder)._2 match {
             case Some(durationAtArrival) =>
               hoursTracking(arrivalAirportIndexAtTopOrder) = (route.arrival, Some(Math.min(durationAtArrival, newDuration)))
@@ -87,9 +108,25 @@ object SingleSourceShortestPath {
     hoursTracking.toSeq
   }
 
+  /**
+   * Finds the shortest path among informed routes between the departure and the arrival airports.
+   * @param departure one of the valid airports from 'Routes.providedRoutes' list.
+   * @param arrival one of the valid airports from 'Routes.providedRoutes' list.
+   * @param routes routes to search in.
+   * @return sequence of airports used for travelling through shortest path if that path is found.
+   *         Otherwise, a failure describing the problem.
+   */
   def findShortestPath(departure: Airport,
                        arrival: Airport,
                        routes: Seq[Routes.Route]): Try[Seq[(Airport, Option[Int])]] = {
+
+    if (!Routes.groupAirports(routes).contains(departure)) {
+      return Failure(InvalidAirport)
+    }
+
+    if (!Routes.groupAirports(routes).contains(arrival)) {
+      return Failure(InvalidAirport)
+    }
 
     if (arrival == departure) {
       return Failure(DepartureEqualToArrival)
