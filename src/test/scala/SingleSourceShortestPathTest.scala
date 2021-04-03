@@ -1,5 +1,5 @@
 import Routes.Airport
-import SingleSourceShortestPath.{DepartureEqualToArrival, InvalidDagCyclesFound, NoRoutesFound}
+import SingleSourceShortestPath.{DepartureEqualToArrival, InvalidAirport, InvalidDagCyclesFound, NoRoutesFound}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
@@ -101,7 +101,7 @@ class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
     }
   }
 
-  it should "not return routes when arrival airport is unreachable" in {
+  it should "return a failure when arrival airport is unreachable from the departure" in {
     val path = SingleSourceShortestPath.findShortestPath(Airport("LAS"), Airport("DUB"), Routes.providedRoutes)
 
     path match {
@@ -110,11 +110,29 @@ class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
     }
   }
 
-  it should "not return routes when arrival airport is the same as departure" in {
+  it should "return a failure when arrival airport is the same as departure" in {
     val path = SingleSourceShortestPath.findShortestPath(Airport("ORD"), Airport("ORD"), Routes.providedRoutes)
 
     path match {
       case Failure(failure) => failure should be (DepartureEqualToArrival)
+      case Success(_) => fail()
+    }
+  }
+
+  it should "return a failure when departure airport is not in the provided list" in {
+    val path = SingleSourceShortestPath.findShortestPath(Airport("SNN"), Airport("ORD"), Routes.providedRoutes)
+
+    path match {
+      case Failure(failure) => failure should be (InvalidAirport)
+      case Success(_) => fail()
+    }
+  }
+
+  it should "return a failure when arrival airport is not in the provided list" in {
+    val path = SingleSourceShortestPath.findShortestPath(Airport("DUB"), Airport("SNN"), Routes.providedRoutes)
+
+    path match {
+      case Failure(failure) => failure should be (InvalidAirport)
       case Success(_) => fail()
     }
   }
