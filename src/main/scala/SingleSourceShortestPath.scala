@@ -1,10 +1,13 @@
 import Routes.Airport
 
-import java.security.InvalidParameterException
 import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
 
 object SingleSourceShortestPath {
+
+  case object InvalidDagCyclesFound extends Throwable
+  case object DepartureEqualToArrival extends Throwable
+  case object NoRoutesFound extends Throwable
 
   def createTopologicalOrder(routes: Seq[Routes.Route]): Try[Seq[Airport]] = {
     val graph = Routes.buildGraph(routes)
@@ -46,18 +49,18 @@ object SingleSourceShortestPath {
     if (visitedAirportsCounter == graph.size) {
       Success(topologicalOrder)
     } else {
-      Failure(new InvalidParameterException("informed routes contain routes that end up in a graph with cycles"))
+      Failure(InvalidDagCyclesFound)
     }
   }
 
   def createSSSP(graph: Map[Airport, Seq[Routes.Route]],
                  topologicalOrder: Seq[Airport],
-                 source: Airport): Seq[(Airport, Option[Int])] = {
+                 departure: Airport): Seq[(Airport, Option[Int])] = {
 
     val hoursTracking: mutable.ArraySeq[(Airport, Option[Int])] =
       mutable.ArraySeq.from(topologicalOrder.map((_, None)))
 
-    hoursTracking(topologicalOrder.indexOf(source)) = (source, Some(0))
+    hoursTracking(topologicalOrder.indexOf(departure)) = (departure, Some(0))
 
     for (airport <- topologicalOrder) {
 
@@ -82,5 +85,21 @@ object SingleSourceShortestPath {
     }
 
     hoursTracking.toSeq
+  }
+
+  def findShortestPath(departure: Airport,
+                       arrival: Airport,
+                       routes: Seq[Routes.Route]): Try[Seq[(Airport, Option[Int])]] = {
+
+    if (arrival == departure) {
+      return Failure(DepartureEqualToArrival)
+    }
+
+    val graph = Routes.buildGraph(routes)
+
+    createTopologicalOrder(routes)
+      .map(topOrder => createSSSP(graph, topOrder, departure).take(topOrder.indexOf(arrival) + 1))
+      .filter(_.size > 1)
+      .orElse(Failure(NoRoutesFound))
   }
 }
