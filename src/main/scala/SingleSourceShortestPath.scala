@@ -17,11 +17,10 @@ object SingleSourceShortestPath {
    *         of the graph if the graph is a Directed Acyclic Graph (DAG).
    *         Otherwise, a failure if graph is not a DAG.
    */
-  def createTopologicalOrder(routes: Seq[Routes.Route]): Try[Seq[Airport]] = {
-    val graph = Routes.buildGraph(routes)
+  def createTopologicalOrder(graph: Map[Airport, Seq[Routes.Route]], routes: Seq[Routes.Route]): Try[Seq[Airport]] = {
 
     // Map[Airport, amount of routes that have this airport as arrival].
-    // It could be the graph instead of the routes.
+    // It could use the graph instead of the routes.
     val initialAmountArrivalConnections: Map[Airport, Int] = Routes.groupAirports(routes)
       .map(airport => (airport, routes.count(_.arrival == airport))).toMap
 
@@ -61,8 +60,6 @@ object SingleSourceShortestPath {
     }
   }
 
-
-
   /**
    * Creates the Single Source Shortest Path (SSP) from the topological order provided.
    * @param graph that will be used to check the hours in order to build the shortest duration
@@ -89,16 +86,15 @@ object SingleSourceShortestPath {
       graph(airport).foreach { route =>
 
         hoursTracking(airportIndexAtTopOrder)._2.foreach { routesOfCurrentAirport =>
-          val durationAtCurrentAirport = routesOfCurrentAirport.map(_.durationHours).sum
-
           val arrivalAirportIndexAtTopOrder = topologicalOrder.indexOf(route.arrival)
-
-          val newDuration = durationAtCurrentAirport + route.durationHours
 
           // update each airport with minimum duration from the source
           hoursTracking(arrivalAirportIndexAtTopOrder)._2 match {
             case Some(routesAtArrival) =>
+              val durationAtCurrentAirport = routesOfCurrentAirport.map(_.durationHours).sum
+              val newDuration = durationAtCurrentAirport + route.durationHours
               val durationAtArrival = routesAtArrival.map(_.durationHours).sum
+
               if (newDuration < durationAtArrival) {
                 hoursTracking(arrivalAirportIndexAtTopOrder) = (route.arrival,
                   hoursTracking(airportIndexAtTopOrder)._2.map(_ :+ route))
@@ -140,7 +136,7 @@ object SingleSourceShortestPath {
 
     val graph = Routes.buildGraph(routes)
 
-    createTopologicalOrder(routes)
+    createTopologicalOrder(graph, routes)
       .map(topOrder => createSSSP(graph, topOrder, departure).take(topOrder.indexOf(arrival) + 1).last)
       .map(_._2)
       .filter(_.nonEmpty)

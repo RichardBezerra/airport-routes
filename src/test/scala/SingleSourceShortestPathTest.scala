@@ -1,4 +1,4 @@
-import Routes.{Airport, Route}
+import Routes.{Airport, Route, buildGraph}
 import SingleSourceShortestPath.{DepartureEqualToArrival, InvalidAirport, InvalidDagCyclesFound, NoRoutesFound}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers
@@ -9,13 +9,17 @@ import scala.util.{Failure, Success}
 class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
 
   "Single Source Shortest Path" should "create a topological order successfully when it receives a DAG" in {
-    val topologicalOrder = SingleSourceShortestPath.createTopologicalOrder(Routes.providedRoutes)
+    val graph = buildGraph(Routes.providedRoutes)
+
+    val topologicalOrder = SingleSourceShortestPath.createTopologicalOrder(graph, Routes.providedRoutes)
 
     topologicalOrder.isSuccess should be(true)
   }
 
   it should "create a topological order with DUB as the first and SYD as the last given the provided routes" in {
-    val topologicalOrder = SingleSourceShortestPath.createTopologicalOrder(Routes.providedRoutes)
+    val graph = buildGraph(Routes.providedRoutes)
+
+    val topologicalOrder = SingleSourceShortestPath.createTopologicalOrder(graph, Routes.providedRoutes)
 
     topologicalOrder match {
       case Success(topOrder) =>
@@ -28,7 +32,9 @@ class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
   it should "detect cycles while building topological order" in {
     val cyclicalRoutes = Routes.providedRoutes :+ Routes.Route(Airport("LAS"), Airport("CDG"), 4)
 
-    val topOrder = SingleSourceShortestPath.createTopologicalOrder(cyclicalRoutes)
+    val graph = buildGraph(cyclicalRoutes)
+
+    val topOrder = SingleSourceShortestPath.createTopologicalOrder(graph, cyclicalRoutes)
 
     topOrder match {
       case Failure(failure) => failure should be(InvalidDagCyclesFound)
@@ -39,12 +45,12 @@ class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
   it should "create the single shortest path from DUB to SYD" in {
     val graph = Routes.buildGraph(Routes.providedRoutes)
 
-    val topologicalOrder = SingleSourceShortestPath.createTopologicalOrder(Routes.providedRoutes)
+    val topologicalOrder = SingleSourceShortestPath.createTopologicalOrder(graph, Routes.providedRoutes)
 
     val sssp = topologicalOrder.map(SingleSourceShortestPath.createSSSP(graph, _, Airport("DUB"))).get
 
     sssp.last match {
-      case (Airport(airport), routes) =>
+      case (Airport(_), routes) =>
         routes should be(Seq(
           Route(Airport("DUB"), Airport("LHR"), 1),
           Route(Airport("LHR"), Airport("BKK"), 9),
@@ -56,12 +62,12 @@ class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
   it should "create the single shortest path from CDG to SYD" in {
     val graph = Routes.buildGraph(Routes.providedRoutes)
 
-    val topologicalOrder = SingleSourceShortestPath.createTopologicalOrder(Routes.providedRoutes)
+    val topologicalOrder = SingleSourceShortestPath.createTopologicalOrder(graph, Routes.providedRoutes)
 
     val sssp = topologicalOrder.map(SingleSourceShortestPath.createSSSP(graph, _, Airport("CDG"))).get
 
     sssp.last match {
-      case (Airport(airport), routes) =>
+      case (Airport(_), routes) =>
         routes should be(Seq(
           Route(Airport("CDG"), Airport("BKK"), 9),
           Route(Airport("BKK"), Airport("SYD"), 11)))
