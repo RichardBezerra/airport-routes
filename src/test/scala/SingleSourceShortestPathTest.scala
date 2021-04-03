@@ -8,17 +8,13 @@ import scala.util.{Failure, Success}
 class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
 
   "Single Source Shortest Path" should "create the topological order successfully when it receives a DAG" in {
-    val graph: Map[Airport, Seq[Routes.Route]] = buildGraph(Routes.providedRoutes)
-
-    val topologicalOrder = SingleSourceShortestPath.createTopologicalOrder(graph)
+    val topologicalOrder = SingleSourceShortestPath.createTopologicalOrder(Routes.providedRoutes)
 
     topologicalOrder.isSuccess should be(true)
   }
 
   it should "create a topological order with DUB as the first and SYD as the last given the provided routes" in {
-    val graph: Map[Airport, Seq[Routes.Route]] = buildGraph(Routes.providedRoutes)
-
-    val topologicalOrder = SingleSourceShortestPath.createTopologicalOrder(graph)
+    val topologicalOrder = SingleSourceShortestPath.createTopologicalOrder(Routes.providedRoutes)
 
     topologicalOrder match {
       case Success(topOrder) =>
@@ -29,7 +25,11 @@ class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
   }
 
   it should "detect cycles while building topological order" in {
-    pending
+    val cyclicalRoutes = Routes.providedRoutes :+ Routes.Route(Airport("LAS"), Airport("CDG"), 4)
+
+    val topologicalOrder = SingleSourceShortestPath.createTopologicalOrder(cyclicalRoutes)
+
+    topologicalOrder.isFailure should be(true)
   }
 
   it should "return routes when arrival airport is reachable" in {
