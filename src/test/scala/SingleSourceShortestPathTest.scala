@@ -1,4 +1,5 @@
 import Routes.Airport
+import SingleSourceShortestPath.{DepartureEqualToArrival, InvalidDagCyclesFound, NoRoutesFound}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
@@ -27,12 +28,15 @@ class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
   it should "detect cycles while building topological order" in {
     val cyclicalRoutes = Routes.providedRoutes :+ Routes.Route(Airport("LAS"), Airport("CDG"), 4)
 
-    val topologicalOrder = SingleSourceShortestPath.createTopologicalOrder(cyclicalRoutes)
+    val topOrder = SingleSourceShortestPath.createTopologicalOrder(cyclicalRoutes)
 
-    topologicalOrder.isFailure should be(true)
+    topOrder match {
+      case Failure(failure) => failure should be(InvalidDagCyclesFound)
+      case Success(_) => fail()
+    }
   }
 
-  it should "return a Single Shortest Path from LAX" in {
+  it should "create the single shortest path from DUB to SYD" in {
     val graph = Routes.buildGraph(Routes.providedRoutes)
 
     val topologicalOrder = SingleSourceShortestPath.createTopologicalOrder(Routes.providedRoutes)
@@ -47,11 +51,71 @@ class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
     }
   }
 
+  it should "create the single shortest path from CDG to SYD" in {
+    val graph = Routes.buildGraph(Routes.providedRoutes)
+
+    val topologicalOrder = SingleSourceShortestPath.createTopologicalOrder(Routes.providedRoutes)
+
+    val sssp = topologicalOrder.map(SingleSourceShortestPath.createSSSP(graph, _, Airport("CDG"))).get
+
+    sssp.last match {
+      case (Airport(airport), hours) =>
+        airport should be("SYD")
+        hours should be(Some(20))
+      case _ => fail()
+    }
+  }
+
+  it should "find the shortest path from DUB to LAS" in {
+    val path = SingleSourceShortestPath.findShortestPath(Airport("DUB"), Airport("LAS"), Routes.providedRoutes).get
+
+    print(path)
+
+    path.last match {
+      case (Airport(airport), hours) =>
+        airport should be("LAS")
+        hours should be(Some(8))
+      case _ => fail()
+    }
+  }
+
+  it should "find the shortest path from DUB to SYD" in {
+    val path = SingleSourceShortestPath.findShortestPath(Airport("DUB"), Airport("SYD"), Routes.providedRoutes).get
+
+    path.last match {
+      case (Airport(airport), hours) =>
+        airport should be("SYD")
+        hours should be(Some(21))
+      case _ => fail()
+    }
+  }
+
+  it should "find the shortest path from CDG to SYD" in {
+    val path = SingleSourceShortestPath.findShortestPath(Airport("CDG"), Airport("SYD"), Routes.providedRoutes).get
+
+    path.last match {
+      case (Airport(airport), hours) =>
+        airport should be("SYD")
+        hours should be(Some(20))
+      case _ => fail()
+    }
+  }
+
   it should "not return routes when arrival airport is unreachable" in {
-    pending
+    val path = SingleSourceShortestPath.findShortestPath(Airport("LAS"), Airport("DUB"), Routes.providedRoutes)
+
+    path match {
+      case Failure(failure) => failure should be (NoRoutesFound)
+      case Success(_) => fail()
+    }
   }
 
   it should "not return routes when arrival airport is the same as departure" in {
-    pending
+    val path = SingleSourceShortestPath.findShortestPath(Airport("ORD"), Airport("ORD"), Routes.providedRoutes)
+
+    path match {
+      case Failure(failure) => failure should be (DepartureEqualToArrival)
+      case Success(_) => fail()
+    }
   }
 }
