@@ -74,13 +74,13 @@ object SingleSourceShortestPath {
    */
   def createSSSP(graph: Map[Airport, Seq[Routes.Route]],
                  topologicalOrder: Seq[Airport],
-                 departure: Airport): Seq[(Airport, Option[Int], Seq[Routes.Route])] = {
+                 departure: Airport): Seq[(Airport, Option[Seq[Routes.Route]])] = {
 
     // initiate an array to track the hours from source to each airport
-    val hoursTracking: mutable.ArraySeq[(Airport, Option[Int], Seq[Routes.Route])] =
-      mutable.ArraySeq.from(topologicalOrder.map((_, None, Seq())))
+    val hoursTracking: mutable.ArraySeq[(Airport, Option[Seq[Routes.Route]])] =
+      mutable.ArraySeq.from(topologicalOrder.map((_, None)))
 
-    hoursTracking(topologicalOrder.indexOf(departure)) = (departure, Some(0), Seq())
+    hoursTracking(topologicalOrder.indexOf(departure)) = (departure, Some(Seq()))
 
     for (airport <- topologicalOrder) {
 
@@ -88,7 +88,8 @@ object SingleSourceShortestPath {
 
       graph(airport).foreach { route =>
 
-        hoursTracking(airportIndexAtTopOrder)._2.foreach { durationAtCurrentAirport =>
+        hoursTracking(airportIndexAtTopOrder)._2.foreach { routesOfCurrentAirport =>
+          val durationAtCurrentAirport = routesOfCurrentAirport.map(_.durationHours).sum
 
           val arrivalAirportIndexAtTopOrder = topologicalOrder.indexOf(route.arrival)
 
@@ -96,14 +97,15 @@ object SingleSourceShortestPath {
 
           // update each airport with minimum duration from the source
           hoursTracking(arrivalAirportIndexAtTopOrder)._2 match {
-            case Some(durationAtArrival) =>
+            case Some(routesAtArrival) =>
+              val durationAtArrival = routesAtArrival.map(_.durationHours).sum
               if (newDuration < durationAtArrival) {
                 hoursTracking(arrivalAirportIndexAtTopOrder) = (route.arrival,
-                  Some(newDuration), hoursTracking(airportIndexAtTopOrder)._3 :+ route)
+                  hoursTracking(airportIndexAtTopOrder)._2.map(_ :+ route))
               }
             case None =>
               hoursTracking(arrivalAirportIndexAtTopOrder) = (route.arrival,
-                Some(newDuration), hoursTracking(airportIndexAtTopOrder)._3 :+ route)
+                hoursTracking(airportIndexAtTopOrder)._2.map(_ :+ route))
           }
         }
       }
@@ -122,7 +124,7 @@ object SingleSourceShortestPath {
    */
   def findShortestPath(departure: Airport,
                        arrival: Airport,
-                       routes: Seq[Routes.Route]): Try[Seq[(Airport, Option[Int], Seq[Routes.Route])]] = {
+                       routes: Seq[Routes.Route]): Try[Seq[(Airport, Option[Seq[Routes.Route]])]] = {
 
     if (!Routes.groupAirports(routes).contains(departure)) {
       return Failure(InvalidAirport)
