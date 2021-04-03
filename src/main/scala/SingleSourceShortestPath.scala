@@ -1,4 +1,4 @@
-import Routes.{Airport, buildGraph, groupAirports}
+import Routes.Airport
 
 import java.security.InvalidParameterException
 import scala.collection.mutable
@@ -7,11 +7,11 @@ import scala.util.{Failure, Success, Try}
 object SingleSourceShortestPath {
 
   def createTopologicalOrder(routes: Seq[Routes.Route]): Try[Seq[Airport]] = {
-    val graph = buildGraph(routes)
+    val graph = Routes.buildGraph(routes)
 
     // Map[Airport, amount of routes that have this airport as arrival].
     // It could be the graph instead of the routes.
-    val initialAmountArrivalConnections: Map[Airport, Int] = groupAirports(routes)
+    val initialAmountArrivalConnections: Map[Airport, Int] = Routes.groupAirports(routes)
       .map(airport => (airport, routes.count(_.arrival == airport))).toMap
 
     // A mutable Map[Airport, amount of routes that have this airport as arrival]
@@ -46,7 +46,7 @@ object SingleSourceShortestPath {
     if (visitedAirportsCounter == graph.size) {
       Success(topologicalOrder)
     } else {
-      Failure(new InvalidParameterException("Graph is not a DAG"))
+      Failure(new InvalidParameterException("informed routes contain routes that end up in a graph with cycles"))
     }
   }
 }
