@@ -1,15 +1,18 @@
-import Routes.{Airport, groupAirports}
+import Routes.{Airport, buildGraph, groupAirports}
 
+import java.security.InvalidParameterException
 import scala.collection.mutable
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 
 object SingleSourceShortestPath {
 
-  def createTopologicalOrder(graph: Map[Airport, Seq[Routes.Route]]): Try[Seq[Airport]] = {
+  def createTopologicalOrder(routes: Seq[Routes.Route]): Try[Seq[Airport]] = {
+    val graph = buildGraph(routes)
+
     // Map[Airport, amount of routes that have this airport as arrival].
     // It could be the graph instead of the routes.
-    val initialAmountArrivalConnections: Map[Airport, Int] = groupAirports(Routes.providedRoutes)
-      .map(airport => (airport, Routes.providedRoutes.count(_.arrival == airport))).toMap
+    val initialAmountArrivalConnections: Map[Airport, Int] = groupAirports(routes)
+      .map(airport => (airport, routes.count(_.arrival == airport))).toMap
 
     // A mutable Map[Airport, amount of routes that have this airport as arrival]
     // used to track the the decrement of connections while topological order is being created.
@@ -19,11 +22,14 @@ object SingleSourceShortestPath {
     val airportsToProcess: mutable.Queue[Airport] =
       mutable.Queue.from(initialAmountArrivalConnections.filter(_._2 == 0).keys)
 
+    var visitedAirportsCounter: Int = 0
+
     var topologicalOrder: Seq[Airport] = Seq()
 
     while (airportsToProcess.nonEmpty) {
       val airport = airportsToProcess.dequeue()
       topologicalOrder = topologicalOrder :+ airport
+      visitedAirportsCounter = visitedAirportsCounter + 1
 
       graph.get(airport).foreach(_.foreach { route =>
         // decrease number of routes that are connected current airport
@@ -37,6 +43,10 @@ object SingleSourceShortestPath {
       })
     }
 
-    Success(topologicalOrder)
+    if (visitedAirportsCounter == graph.size) {
+      Success(topologicalOrder)
+    } else {
+      Failure(new InvalidParameterException("Graph is not a DAG"))
+    }
   }
 }
