@@ -124,7 +124,7 @@ object SingleSourceShortestPath {
    */
   def findShortestPath(departure: Airport,
                        arrival: Airport,
-                       routes: Seq[Routes.Route]): Try[Seq[(Airport, Option[Seq[Routes.Route]])]] = {
+                       routes: Seq[Routes.Route]): Try[Seq[Routes.Route]] = {
 
     if (!Routes.groupAirports(routes).contains(departure)) {
       return Failure(InvalidAirport)
@@ -141,8 +141,9 @@ object SingleSourceShortestPath {
     val graph = Routes.buildGraph(routes)
 
     createTopologicalOrder(routes)
-      .map(topOrder => createSSSP(graph, topOrder, departure).take(topOrder.indexOf(arrival) + 1))
-      .filter(_.size > 1)
+      .map(topOrder => createSSSP(graph, topOrder, departure).take(topOrder.indexOf(arrival) + 1).last)
+      .map(_._2.get)
+      .filter(_.nonEmpty)
       .orElse(Failure(NoRoutesFound))
   }
 }
