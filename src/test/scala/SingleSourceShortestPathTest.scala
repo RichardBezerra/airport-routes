@@ -44,9 +44,10 @@ class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
     val sssp = topologicalOrder.map(SingleSourceShortestPath.createSSSP(graph, _, Airport("DUB"))).get
 
     sssp.last match {
-      case (Airport(airport), hours) =>
+      case (Airport(airport), hours, routes) =>
         airport should be("SYD")
         hours should be(Some(21))
+        routes.map(_.durationHours).sum should be(21)
       case _ => fail()
     }
   }
@@ -59,7 +60,7 @@ class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
     val sssp = topologicalOrder.map(SingleSourceShortestPath.createSSSP(graph, _, Airport("CDG"))).get
 
     sssp.last match {
-      case (Airport(airport), hours) =>
+      case (Airport(airport), hours, routes) =>
         airport should be("SYD")
         hours should be(Some(20))
       case _ => fail()
@@ -72,7 +73,7 @@ class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
     print(path)
 
     path.last match {
-      case (Airport(airport), hours) =>
+      case (Airport(airport), hours, routes) =>
         airport should be("LAS")
         hours should be(Some(8))
       case _ => fail()
@@ -83,7 +84,7 @@ class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
     val path = SingleSourceShortestPath.findShortestPath(Airport("DUB"), Airport("SYD"), Routes.providedRoutes).get
 
     path.last match {
-      case (Airport(airport), hours) =>
+      case (Airport(airport), hours, routes) =>
         airport should be("SYD")
         hours should be(Some(21))
       case _ => fail()
@@ -94,7 +95,7 @@ class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
     val path = SingleSourceShortestPath.findShortestPath(Airport("CDG"), Airport("SYD"), Routes.providedRoutes).get
 
     path.last match {
-      case (Airport(airport), hours) =>
+      case (Airport(airport), hours, routes) =>
         airport should be("SYD")
         hours should be(Some(20))
       case _ => fail()
