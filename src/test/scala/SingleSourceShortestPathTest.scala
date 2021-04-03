@@ -70,43 +70,39 @@ class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
   }
 
   it should "find the shortest path from DUB to LAS" in {
-    val path = SingleSourceShortestPath.findShortestPath(Airport("DUB"), Airport("LAS"), Routes.providedRoutes).get
+    val path = SingleSourceShortestPath.findShortestPath(Airport("DUB"), Airport("LAS"), Routes.providedRoutes)
 
-    print(path)
-
-    path.last match {
-      case (Airport(airport), Some(routes)) =>
-        airport should be("LAS")
+    path match {
+      case Success(routes) =>
         routes should be(Seq(
           Route(Airport("DUB"), Airport("ORD"), 6),
           Route(Airport("ORD"), Airport("LAS"), 2)))
-      case _ => fail()
+      case Failure(failure) => fail(failure)
     }
   }
 
   it should "find the shortest path from DUB to SYD" in {
-    val path = SingleSourceShortestPath.findShortestPath(Airport("DUB"), Airport("SYD"), Routes.providedRoutes).get
+    val path = SingleSourceShortestPath.findShortestPath(Airport("DUB"), Airport("SYD"), Routes.providedRoutes)
 
-    path.last match {
-      case (Airport(airport), Some(routes)) =>
+    path match {
+      case Success(routes) =>
         routes should be(Seq(
           Route(Airport("DUB"), Airport("LHR"), 1),
           Route(Airport("LHR"), Airport("BKK"), 9),
           Route(Airport("BKK"), Airport("SYD"), 11)))
-      case _ => fail()
+      case Failure(failure) => fail(failure)
     }
   }
 
   it should "find the shortest path from CDG to SYD" in {
-    val path = SingleSourceShortestPath.findShortestPath(Airport("CDG"), Airport("SYD"), Routes.providedRoutes).get
+    val path = SingleSourceShortestPath.findShortestPath(Airport("CDG"), Airport("SYD"), Routes.providedRoutes)
 
-    path.last match {
-      case (Airport(airport), Some(routes)) =>
-        airport should be("SYD")
+    path match {
+      case Success(routes) =>
         routes should be(Seq(
           Route(Airport("CDG"), Airport("BKK"), 9),
           Route(Airport("BKK"), Airport("SYD"), 11)))
-      case _ => fail()
+      case Failure(failure) => fail(failure)
     }
   }
 
