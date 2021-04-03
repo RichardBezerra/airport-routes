@@ -1,4 +1,4 @@
-import Routes.Airport
+import Routes.{Airport, Route}
 import SingleSourceShortestPath.{DepartureEqualToArrival, InvalidAirport, InvalidDagCyclesFound, NoRoutesFound}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers
@@ -44,10 +44,11 @@ class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
     val sssp = topologicalOrder.map(SingleSourceShortestPath.createSSSP(graph, _, Airport("DUB"))).get
 
     sssp.last match {
-      case (Airport(airport), hours, routes) =>
-        airport should be("SYD")
-        hours should be(Some(21))
-        routes.map(_.durationHours).sum should be(21)
+      case (Airport(airport), Some(routes)) =>
+        routes should be(Seq(
+          Route(Airport("DUB"), Airport("LHR"), 1),
+          Route(Airport("LHR"), Airport("BKK"), 9),
+          Route(Airport("BKK"), Airport("SYD"), 11)))
       case _ => fail()
     }
   }
@@ -60,9 +61,10 @@ class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
     val sssp = topologicalOrder.map(SingleSourceShortestPath.createSSSP(graph, _, Airport("CDG"))).get
 
     sssp.last match {
-      case (Airport(airport), hours, routes) =>
-        airport should be("SYD")
-        hours should be(Some(20))
+      case (Airport(airport), Some(routes)) =>
+        routes should be(Seq(
+          Route(Airport("CDG"), Airport("BKK"), 9),
+          Route(Airport("BKK"), Airport("SYD"), 11)))
       case _ => fail()
     }
   }
@@ -73,9 +75,11 @@ class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
     print(path)
 
     path.last match {
-      case (Airport(airport), hours, routes) =>
+      case (Airport(airport), Some(routes)) =>
         airport should be("LAS")
-        hours should be(Some(8))
+        routes should be(Seq(
+          Route(Airport("DUB"), Airport("ORD"), 6),
+          Route(Airport("ORD"), Airport("LAS"), 2)))
       case _ => fail()
     }
   }
@@ -84,9 +88,11 @@ class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
     val path = SingleSourceShortestPath.findShortestPath(Airport("DUB"), Airport("SYD"), Routes.providedRoutes).get
 
     path.last match {
-      case (Airport(airport), hours, routes) =>
-        airport should be("SYD")
-        hours should be(Some(21))
+      case (Airport(airport), Some(routes)) =>
+        routes should be(Seq(
+          Route(Airport("DUB"), Airport("LHR"), 1),
+          Route(Airport("LHR"), Airport("BKK"), 9),
+          Route(Airport("BKK"), Airport("SYD"), 11)))
       case _ => fail()
     }
   }
@@ -95,9 +101,11 @@ class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
     val path = SingleSourceShortestPath.findShortestPath(Airport("CDG"), Airport("SYD"), Routes.providedRoutes).get
 
     path.last match {
-      case (Airport(airport), hours, routes) =>
+      case (Airport(airport), Some(routes)) =>
         airport should be("SYD")
-        hours should be(Some(20))
+        routes should be(Seq(
+          Route(Airport("CDG"), Airport("BKK"), 9),
+          Route(Airport("BKK"), Airport("SYD"), 11)))
       case _ => fail()
     }
   }
