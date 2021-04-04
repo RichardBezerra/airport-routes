@@ -42,11 +42,11 @@ object SingleSourceShortestPath {
       visitedAirportsCounter = visitedAirportsCounter + 1
 
       graph.get(airport).foreach(_.foreach { route =>
-        // decrease number of routes that are connected current airport
+        // decrease number of routes that are connected the current airport
         // since it was 'removed' from the list of nodes that still needs to be processed.
         mutableAmountArrivalConnections.put(route.arrival, mutableAmountArrivalConnections(route.arrival) - 1)
 
-        // add airport to process list when it no longer has routes to it.
+        // add airport to process list when it no longer have routes to it.
         if (mutableAmountArrivalConnections(route.arrival) == 0) {
           airportsToProcess.enqueue(route.arrival)
         }
