@@ -1,6 +1,7 @@
 import Routes.Airport
 
 import scala.collection.mutable
+import scala.util.control.Breaks.{break, breakable}
 import scala.util.{Success, Try}
 
 trait DijkstraPathFinder {
@@ -69,6 +70,12 @@ object LazyDijkstra extends DijkstraPathFinder {
     while (routesPriorityQueue.nonEmpty) {
       val currentRoute = routesPriorityQueue.dequeue()
       visitedAirports = visitedAirports :+ currentRoute.departure
+
+      breakable {
+        if (durationDistanceTrackingMap(currentRoute.departure).exists(_ < currentRoute.durationHours)) {
+          break
+        }
+      }
 
       graph(currentRoute.departure).foreach(route => {
         if (!visitedAirports.contains(route.arrival)) {
