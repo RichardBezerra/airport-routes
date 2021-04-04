@@ -70,7 +70,7 @@ object LazyDijkstra extends DijkstraPathFinder {
       val currentRoute = routesPriorityQueue.dequeue()
       visitedAirports = visitedAirports :+ currentRoute.departure
 
-      graph.get(currentRoute.departure).foreach(optRoute => optRoute.foreach(route => {
+      graph(currentRoute.departure).foreach(route => {
         if (!visitedAirports.contains(route.arrival)) {
           val currentDurationAtDeparture = durationDistanceTrackingMap(currentRoute.departure)
 
@@ -79,7 +79,7 @@ object LazyDijkstra extends DijkstraPathFinder {
             .map(newDuration => route.copy(departure = route.arrival, durationHours = newDuration))
             .foreach(routesPriorityQueue.enqueue(_))
         }
-      }))
+      })
     }
 
     Success(durationDistanceTrackingMap)
