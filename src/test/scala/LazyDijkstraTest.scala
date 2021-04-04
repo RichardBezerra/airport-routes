@@ -133,9 +133,8 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
 
     val graph = buildGraph(expandedRoutes)
 
-    pending
     LazyDijkstra.dijkstra(graph, Airport("DUB"), numberOfAirports) match {
-      case Success(value) => value should have size 3
+      case Success(value) => value(Airport("SYD")) should be(Some(21))
       case Failure(exception) => fail(exception)
     }
   }
