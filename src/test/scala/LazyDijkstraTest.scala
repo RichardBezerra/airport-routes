@@ -127,7 +127,7 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
     durationDistanceTrackingMap(Airport("LAX")) should be(Some(7))
   }
 
-  "Lazy Dijkstra Path Finder" should "return find shortest distance all airports" in {
+  "Lazy Dijkstra Path Finder" should "return shortest distance to all airports" in {
     val expandedRoutes = Routes.providedRoutes
     val numberOfAirports = Routes.groupAirports(expandedRoutes).size
 
