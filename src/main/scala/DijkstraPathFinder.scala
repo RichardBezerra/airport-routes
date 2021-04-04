@@ -83,6 +83,7 @@ object LazyDijkstra extends DijkstraPathFinder {
 
           durationDistanceTrackingMap
             .reduceDurationToArrivalIfRouteIsFaster(currentDurationAtDeparture, route)
+            // FIXME departure = route.arrival is hard to understand
             .map(newDuration => route.copy(departure = route.arrival, durationHours = newDuration))
             .foreach(routesPriorityQueue.enqueue(_))
         }
