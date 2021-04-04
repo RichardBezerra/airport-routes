@@ -35,7 +35,7 @@ class DurationDistanceTrackingMap extends mutable.HashMap[Airport, Option[Int]] 
             }
         }
       case None =>
-        this.put(route.arrival, Some(route.durationHours))
+        this.put(route.arrival, currentDuration.map(_ + route.durationHours))
     }
   }
 }
