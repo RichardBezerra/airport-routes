@@ -1,3 +1,5 @@
+import java.util.Comparator
+
 object Routes {
 
   case class Airport(iataCode: String)
