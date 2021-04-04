@@ -16,41 +16,54 @@ trait DijkstraPathFinder {
                        dijkstra: Seq[Routes.Route]): Try[Seq[Routes.Route]]
 }
 
-object RouteDurationReverseOrdering extends Ordering[Routes.Route] {
-  override def compare(routeA: Routes.Route,
-                       routeB: Routes.Route): Int = -routeA.durationHours.compare(routeB.durationHours)
+object RouteDurationReverseOrdering extends Ordering[(Airport, TrackingPath)] {
+  override def compare(x: (Airport, TrackingPath), y: (Airport, TrackingPath)): Int = {
+    -x._2.totalDuration.compare(y._2.totalDuration)
+  }
 }
 
-class DurationDistanceTrackingMap extends mutable.HashMap[Airport, Option[Int]] {
+case class TrackingPath(isInitiated: Boolean, routes: Seq[Routes.Route]) {
+  def totalDuration: Int = if (isInitiated) routes.map(_.durationHours).sum else 100000
+}
+
+object TrackingPath {
+  def apply(): TrackingPath = new TrackingPath(false, Seq())
+
+  def apply(routes: Seq[Routes.Route]): TrackingPath = new TrackingPath(true, routes)
+}
+
+class DurationDistanceTrackingMap extends mutable.HashMap[Airport, TrackingPath] {
   def setDurationOfDepartureToZero(departure: Airport): Unit = {
-    this.put(departure, Some(0))
+    this.put(departure, TrackingPath())
   }
 
-  def reduceDurationToArrivalIfRouteIsFaster(currentDuration: Option[Int], route: Routes.Route): Option[Int] = {
+  def reduceDurationToArrivalIfRouteIsFaster(currentTracking: TrackingPath, route: Routes.Route): Option[(Airport, TrackingPath)] = {
     val newDuration = this (route.arrival) match {
-      case Some(durationAtArrival) =>
-        currentDuration match {
-          case Some(duration) =>
-            if (duration + route.durationHours < durationAtArrival) {
-              Some(duration + route.durationHours)
+      case arrivalTracking @ TrackingPath(true, _) =>
+        currentTracking match {
+          case tracking @ TrackingPath(_, routes) =>
+            if (tracking.totalDuration + route.durationHours < arrivalTracking.totalDuration) {
+              TrackingPath(routes :+ route)
             } else {
-              None
+              TrackingPath()
             }
         }
-      case None =>
-        currentDuration.map(_ + route.durationHours)
+      case _ => TrackingPath(currentTracking.routes :+ route)
     }
 
-    newDuration.foreach(nd => this.put(route.arrival, Some(nd)))
-
-    newDuration
+    if (newDuration.isInitiated) {
+      this.put(route.arrival, newDuration)
+      Some((route.arrival, newDuration))
+    } else {
+      None
+    }
   }
 }
 
 object DurationDistanceTrackingMap {
   def apply(airports: Set[Airport]): DurationDistanceTrackingMap = {
     val durationDistanceTrackingMap = new DurationDistanceTrackingMap()
-    durationDistanceTrackingMap.addAll(airports.map((_, None)))
+    durationDistanceTrackingMap.addAll(airports.map((_, TrackingPath())))
   }
 }
 
@@ -67,26 +80,24 @@ object LazyDijkstra extends DijkstraPathFinder {
 
     val routesPriorityQueue = mutable.PriorityQueue()(RouteDurationReverseOrdering)
 
-    routesPriorityQueue.enqueue(Routes.Route(departure, departure, 0))
+    routesPriorityQueue.enqueue((departure, TrackingPath()))
 
     while (routesPriorityQueue.nonEmpty) {
       val currentRoute = routesPriorityQueue.dequeue()
-      visitedAirports = visitedAirports :+ currentRoute.departure
+      visitedAirports = visitedAirports :+ currentRoute._1
 
       breakable {
-        if (durationDistanceTrackingMap(currentRoute.departure).exists(_ < currentRoute.durationHours)) {
+        if (durationDistanceTrackingMap(currentRoute._1).totalDuration < currentRoute._2.totalDuration) {
           break
         }
       }
 
-      graph(currentRoute.departure).foreach(route => {
+      graph(currentRoute._1).foreach(route => {
         if (!visitedAirports.contains(route.arrival)) {
-          val currentDurationAtDeparture = durationDistanceTrackingMap(currentRoute.departure)
+          val currentDurationAtDeparture = durationDistanceTrackingMap(currentRoute._1)
 
           durationDistanceTrackingMap
             .reduceDurationToArrivalIfRouteIsFaster(currentDurationAtDeparture, route)
-            // FIXME departure = route.arrival is hard to understand
-            .map(newDuration => route.copy(departure = route.arrival, durationHours = newDuration))
             .foreach(routesPriorityQueue.enqueue(_))
         }
       })
