@@ -27,21 +27,23 @@ class DurationDistanceTrackingMap extends mutable.HashMap[Airport, Option[Int]] 
   }
 
   def reduceDurationToArrivalIfRouteIsFaster(currentDuration: Option[Int], route: Routes.Route): Option[Int] = {
-    this (route.arrival) match {
+    val newDuration = this (route.arrival) match {
       case Some(durationAtArrival) =>
         currentDuration match {
           case Some(duration) =>
             if (duration + route.durationHours < durationAtArrival) {
-              this.put(route.arrival, Some(duration + route.durationHours))
               Some(duration + route.durationHours)
             } else {
               None
             }
         }
       case None =>
-        this.put(route.arrival, currentDuration.map(_ + route.durationHours))
         currentDuration.map(_ + route.durationHours)
     }
+
+    newDuration.foreach(nd => this.put(route.arrival, Some(nd)))
+
+    newDuration
   }
 }
 
