@@ -1,4 +1,4 @@
-import Routes.{Airport, buildGraph, providedRoutes}
+import Routes.{Airport, Route, buildGraph, providedRoutes}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
@@ -10,15 +10,23 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
   "RouteDurationReverseOrdering" should "enqueue items following priority" in {
     val routesPQ = mutable.PriorityQueue()(RouteDurationReverseOrdering)
 
-    providedRoutes.foreach(routesPQ.enqueue(_))
+    providedRoutes.foreach(r => routesPQ.enqueue((r.arrival, TrackingPath(Seq(r)))))
 
-    routesPQ.dequeue().durationHours should be(1)
+    routesPQ.dequeue()._2.totalDuration should be(1)
 
-    routesPQ.dequeue().durationHours should be(2)
+    routesPQ.dequeue()._2.totalDuration should be(2)
 
-    routesPQ.enqueue(Routes.Route(Airport("A"), Airport("B"), 1))
+    routesPQ.enqueue((Airport("A"), TrackingPath(Seq(Routes.Route(Airport("A"), Airport("B"), 1)))))
 
-    routesPQ.dequeue().durationHours should be(1)
+    routesPQ.dequeue()._2.totalDuration should be(1)
+  }
+
+  "TrackingPath" should "add route when is not initiated" in {
+
+  }
+
+  it should "add route when is final duration is smaller than its current one" in {
+
   }
 
   "DurationDistanceTrackingMap" should "be created using a list of airports" in {
@@ -36,7 +44,7 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
 
     durationDistanceTrackingMap.setDurationOfDepartureToZero(Airport("DUB"))
 
-    durationDistanceTrackingMap(Airport("DUB")) should be(Some(0))
+    durationDistanceTrackingMap(Airport("DUB")) should be(TrackingPath(isInitiated = false, Seq()))
   }
 
   it should "update duration tracking to given arrival if duration at get that does not exist" in {
@@ -52,7 +60,8 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
         Routes.Route(Airport("DUB"), Airport("LHR"), 2))
 
     // assert
-    durationDistanceTrackingMap(Airport("LHR")) should be(Some(2))
+    durationDistanceTrackingMap(Airport("LHR")) should
+      be(TrackingPath(isInitiated = true, Seq(Route(Airport("DUB"), Airport("LHR"), 2))))
   }
 
   it should "update duration tracking to given arrival if duration to get that is smaller then its current value" in {
@@ -92,7 +101,8 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
         Routes.Route(Airport("DUB"), Airport("LHR"), 3))
 
     // assert
-    durationDistanceTrackingMap(Airport("LHR")) should be(Some(2))
+    durationDistanceTrackingMap(Airport("LHR")) should
+      be(TrackingPath(isInitiated = true, Seq(Route(Airport("DUB"),Airport("LHR"), 2))))
   }
 
   it should "generate expected map based on control routes" in {
@@ -111,20 +121,22 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
 
     durationDistanceTrackingMap.setDurationOfDepartureToZero(Airport("DUB"))
 
-    // act
-    durationDistanceTrackingMap.reduceDurationToArrivalIfRouteIsFaster(Some(0), Routes.Route(Airport("DUB"), Airport("LHR"), 4))
-    durationDistanceTrackingMap.reduceDurationToArrivalIfRouteIsFaster(Some(0), Routes.Route(Airport("DUB"), Airport("CDG"), 1))
-    durationDistanceTrackingMap.reduceDurationToArrivalIfRouteIsFaster(Some(1), Routes.Route(Airport("CDG"), Airport("LHR"), 2))
-    durationDistanceTrackingMap.reduceDurationToArrivalIfRouteIsFaster(Some(1), Routes.Route(Airport("CDG"), Airport("BKK"), 5))
-    durationDistanceTrackingMap.reduceDurationToArrivalIfRouteIsFaster(Some(3), Routes.Route(Airport("LHR"), Airport("BKK"), 1))
-    durationDistanceTrackingMap.reduceDurationToArrivalIfRouteIsFaster(Some(4), Routes.Route(Airport("BKK"), Airport("LAX"), 3))
+    pending
 
-    // assert
-    durationDistanceTrackingMap(Airport("DUB")) should be(Some(0))
-    durationDistanceTrackingMap(Airport("LHR")) should be(Some(3))
-    durationDistanceTrackingMap(Airport("CDG")) should be(Some(1))
-    durationDistanceTrackingMap(Airport("BKK")) should be(Some(4))
-    durationDistanceTrackingMap(Airport("LAX")) should be(Some(7))
+    // act
+//    durationDistanceTrackingMap.reduceDurationToArrivalIfRouteIsFaster(Some(0), Routes.Route(Airport("DUB"), Airport("LHR"), 4))
+//    durationDistanceTrackingMap.reduceDurationToArrivalIfRouteIsFaster(Some(0), Routes.Route(Airport("DUB"), Airport("CDG"), 1))
+//    durationDistanceTrackingMap.reduceDurationToArrivalIfRouteIsFaster(Some(1), Routes.Route(Airport("CDG"), Airport("LHR"), 2))
+//    durationDistanceTrackingMap.reduceDurationToArrivalIfRouteIsFaster(Some(1), Routes.Route(Airport("CDG"), Airport("BKK"), 5))
+//    durationDistanceTrackingMap.reduceDurationToArrivalIfRouteIsFaster(Some(3), Routes.Route(Airport("LHR"), Airport("BKK"), 1))
+//    durationDistanceTrackingMap.reduceDurationToArrivalIfRouteIsFaster(Some(4), Routes.Route(Airport("BKK"), Airport("LAX"), 3))
+//
+//    // assert
+//    durationDistanceTrackingMap(Airport("DUB")) should be(Some(0))
+//    durationDistanceTrackingMap(Airport("LHR")) should be(Some(3))
+//    durationDistanceTrackingMap(Airport("CDG")) should be(Some(1))
+//    durationDistanceTrackingMap(Airport("BKK")) should be(Some(4))
+//    durationDistanceTrackingMap(Airport("LAX")) should be(Some(7))
   }
 
   "Lazy Dijkstra Path Finder" should "return shortest distance to all airports" in {
@@ -134,7 +146,12 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
     val graph = buildGraph(expandedRoutes)
 
     LazyDijkstra.dijkstra(graph, Airport("DUB"), numberOfAirports) match {
-      case Success(value) => value(Airport("SYD")) should be(Some(21))
+      case Success(value) =>
+        value(Airport("SYD")) should be(TrackingPath(isInitiated = true, Seq(
+          Route(Airport("DUB"), Airport("LHR"), 1),
+          Route(Airport("LHR"), Airport("BKK"), 9),
+          Route(Airport("BKK"), Airport("SYD"), 11)
+        )))
       case Failure(exception) => fail(exception)
     }
   }
