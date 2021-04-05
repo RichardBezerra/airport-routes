@@ -6,6 +6,7 @@ import scala.util.{Success, Try}
 
 trait DijkstraPathFinder {
   def dijkstra(graph: Map[Airport, Seq[Routes.Route]],
+               departure: Airport,
                arrival: Airport,
                numberOfAirports: Int): Try[DurationDistanceTrackingMap]
 
@@ -70,6 +71,7 @@ object DurationDistanceTrackingMap {
 object LazyDijkstra extends DijkstraPathFinder {
   override def dijkstra(graph: Map[Airport, Seq[Routes.Route]],
                         departure: Airport,
+                        arrival: Airport,
                         numberOfAirports: Int): Try[DurationDistanceTrackingMap] = {
 
     var visitedAirports: Seq[Airport] = Seq()
@@ -82,25 +84,29 @@ object LazyDijkstra extends DijkstraPathFinder {
 
     routesPriorityQueue.enqueue((departure, TrackingPath()))
 
-    while (routesPriorityQueue.nonEmpty) {
+    var arrivalFound = false
+
+    while (routesPriorityQueue.nonEmpty && !arrivalFound) {
       val currentRoute = routesPriorityQueue.dequeue()
       visitedAirports = visitedAirports :+ currentRoute._1
 
-      breakable {
-        if (durationDistanceTrackingMap(currentRoute._1).totalDuration < currentRoute._2.totalDuration) {
-          break
-        }
+      val isDurationToArrivalFaster =
+        durationDistanceTrackingMap(currentRoute._1).totalDuration < currentRoute._2.totalDuration
+
+      if (!isDurationToArrivalFaster) {
+
+        graph(currentRoute._1).foreach(route => {
+          if (!visitedAirports.contains(route.arrival)) {
+            val currentDurationAtDeparture = durationDistanceTrackingMap(currentRoute._1)
+
+            durationDistanceTrackingMap
+              .reduceDurationToArrivalIfRouteIsFaster(currentDurationAtDeparture, route)
+              .foreach(routesPriorityQueue.enqueue(_))
+          }
+        })
+
+        arrivalFound = currentRoute._1 == arrival
       }
-
-      graph(currentRoute._1).foreach(route => {
-        if (!visitedAirports.contains(route.arrival)) {
-          val currentDurationAtDeparture = durationDistanceTrackingMap(currentRoute._1)
-
-          durationDistanceTrackingMap
-            .reduceDurationToArrivalIfRouteIsFaster(currentDurationAtDeparture, route)
-            .foreach(routesPriorityQueue.enqueue(_))
-        }
-      })
     }
 
     Success(durationDistanceTrackingMap)
@@ -111,6 +117,7 @@ object LazyDijkstra extends DijkstraPathFinder {
                                 arrival: Airport,
                                 numberOfAirports: Int,
                                 dijkstra: DurationDistanceTrackingMap): Try[(Seq[Routes.Route], Int)] = {
+
     Success((dijkstra(arrival).routes, dijkstra(arrival).totalDuration))
   }
 }
