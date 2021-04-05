@@ -24,7 +24,7 @@ trait ShortestPathFinder {
 
       routesPriorityQueue.enqueue((departure, TrackingPath.notInitiated))
 
-      finder.find(graph, departure, routesPriorityQueue, hoursDistanceTracking)
+      finder.find(graph, allAirports, departure, arrival, routesPriorityQueue, hoursDistanceTracking)
 
       hoursDistanceTracking
         .get(arrival)
@@ -38,7 +38,9 @@ trait ShortestPathFinder {
 trait DirectedCycleGraphFinder {
 
   def find(graph: Map[Airport, Seq[Routes.Route]],
+           allAirports: Set[Airport],
            currentIterationAirport: Airport,
+           arrival: Airport,
            priorityQueue: mutable.PriorityQueue[(Airport, TrackingPath)],
            durationDistanceTracking: DurationDistanceTracking)
 }
@@ -108,7 +110,7 @@ object DurationDistanceTracking {
   }
 }
 
-object LazyDijkstra extends DijkstraPathFinder {
+object LazyDijkstra extends DijkstraPathFinder with DirectedCycleGraphFinder with ShortestPathFinder {
   override def dijkstra(graph: Map[Airport, Seq[Routes.Route]],
                         departure: Airport,
                         arrival: Airport,
@@ -169,6 +171,41 @@ object LazyDijkstra extends DijkstraPathFinder {
         Failure(NoRoutesFound)
       } else {
         Success((dijkstraResult.routes, dijkstraResult.totalDuration))
+      }
+    }
+  }
+
+  override def find(graph: Map[Airport, Seq[Routes.Route]],
+                    allAirports: Set[Airport],
+                    currentIterationAirport: Airport,
+                    arrival: Airport,
+                    routesPriorityQueue: mutable.PriorityQueue[(Airport, TrackingPath)],
+                    durationDistanceTracking: DurationDistanceTracking): Unit = {
+
+    val visitedAirports: mutable.HashMap[Airport, Boolean] = mutable.HashMap.from(allAirports.map((_, false)))
+
+    var arrivalFound = false
+
+    while (routesPriorityQueue.nonEmpty && !arrivalFound) {
+      val currentRoute = routesPriorityQueue.dequeue()
+      visitedAirports.put(currentRoute._1, true)
+
+      val isDurationToArrivalFaster =
+        durationDistanceTracking(currentRoute._1).totalDuration < currentRoute._2.totalDuration
+
+      if (!isDurationToArrivalFaster) {
+
+        graph(currentRoute._1).foreach(route => {
+          if (!visitedAirports(route.arrival)) {
+            val currentDurationAtDeparture = durationDistanceTracking(currentRoute._1)
+
+            durationDistanceTracking
+              .reduceDurationToArrivalIfRouteIsFaster(currentDurationAtDeparture, route)
+              .foreach(routesPriorityQueue.enqueue(_))
+          }
+        })
+
+        arrivalFound = currentRoute._1 == arrival
       }
     }
   }
