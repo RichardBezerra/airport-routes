@@ -133,8 +133,11 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
 
     val graph = buildGraph(expandedRoutes)
 
-    LazyDijkstra.dijkstra(graph, Airport("DUB"), numberOfAirports) match {
+    // act
+    LazyDijkstra.dijkstra(graph, Airport("DUB"), Airport("LAS"), numberOfAirports) match {
       case Success(value) =>
+
+        // assert
         value(Airport("LAS")) should be(TrackingPath(isInitiated = true, Seq(
           Route(Airport("DUB"), Airport("ORD"), 6),
           Route(Airport("ORD"), Airport("LAS"), 2)
@@ -149,7 +152,7 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
 
     val graph = buildGraph(expandedRoutes)
 
-    val dijkstra = LazyDijkstra.dijkstra(graph, Airport("DUB"), numberOfAirports).get
+    val dijkstra = LazyDijkstra.dijkstra(graph, Airport("DUB"), Airport("SYD"), numberOfAirports).get
 
     // act
     val shortestPath = LazyDijkstra.findShortestPath(graph, Airport("DUB"), Airport("SYD"), numberOfAirports, dijkstra)
