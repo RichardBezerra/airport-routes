@@ -1,5 +1,6 @@
+import Errors.{DepartureEqualToArrival, InvalidAirport, NoRoutesFound}
 import Routes.{Airport, Route, buildGraph}
-import SingleSourceShortestPath.{DepartureEqualToArrival, InvalidAirport, InvalidDagCyclesFound, NoRoutesFound}
+import SingleSourceShortestPath.InvalidDagCyclesFound
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper

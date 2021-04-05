@@ -1,7 +1,8 @@
+import Errors.{DepartureEqualToArrival, InvalidAirport, NoRoutesFound}
 import Routes.Airport
 
 import scala.collection.mutable
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 
 trait DijkstraPathFinder {
   def dijkstra(graph: Map[Airport, Seq[Routes.Route]],
@@ -117,6 +118,18 @@ object LazyDijkstra extends DijkstraPathFinder {
                                 numberOfAirports: Int,
                                 dijkstra: DurationDistanceTrackingMap): Try[(Seq[Routes.Route], Int)] = {
 
-    Success((dijkstra(arrival).routes, dijkstra(arrival).totalDuration))
+    if (departure == arrival) {
+      Failure(DepartureEqualToArrival)
+    } else if (!graph.keySet.contains(departure) || !graph.keySet.contains(arrival)) {
+      Failure(InvalidAirport)
+    } else {
+      val dijkstraResult = dijkstra(arrival)
+
+      if (dijkstraResult.routes.isEmpty) {
+        Failure(NoRoutesFound)
+      } else {
+        Success((dijkstraResult.routes, dijkstraResult.totalDuration))
+      }
+    }
   }
 }

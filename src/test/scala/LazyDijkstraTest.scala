@@ -1,3 +1,4 @@
+import Errors.{DepartureEqualToArrival, InvalidAirport, NoRoutesFound}
 import Routes.{Airport, Route, buildGraph, providedRoutes}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers
@@ -196,6 +197,52 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
         duration should be(21)
 
       case Failure(failure) => fail(failure)
+    }
+  }
+
+  it should "return a failure when arrival airport is unreachable from the departure" in {
+    val numberOfAirports = Routes.groupAirports(Routes.providedRoutes).size
+
+    val graph = buildGraph(Routes.providedRoutes)
+
+    val dijkstra = LazyDijkstra.dijkstra(graph, Airport("LAS"), Airport("DUB"), numberOfAirports).get
+
+    val path = LazyDijkstra.findShortestPath(graph, Airport("LAS"), Airport("DUB"), numberOfAirports, dijkstra)
+
+    path match {
+      case Failure(failure) => failure should be (NoRoutesFound)
+      case Success(_) => fail()
+    }
+  }
+
+  it should "return a failure when arrival airport is the same as departure" in {
+    val path = LazyDijkstra.findShortestPath(null, Airport("LAS"), Airport("LAS"), 1, null)
+
+    path match {
+      case Failure(failure) => failure should be (DepartureEqualToArrival)
+      case Success(_) => fail()
+    }
+  }
+
+  it should "return a failure when departure airport is not in the provided list" in {
+    pending
+
+    val path = LazyDijkstra.findShortestPath(null, Airport("SNN"), Airport("LAS"), 1, null)
+
+    path match {
+      case Failure(failure) => failure should be (InvalidAirport)
+      case Success(_) => fail()
+    }
+  }
+
+  it should "return a failure when arrival airport is not in the provided list" in {
+    pending
+
+    val path = LazyDijkstra.findShortestPath(null, Airport("LAS"), Airport("SNN"), 1, null)
+
+    path match {
+      case Failure(failure) => failure should be (InvalidAirport)
+      case Success(_) => fail()
     }
   }
 
