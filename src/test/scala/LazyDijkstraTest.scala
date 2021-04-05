@@ -34,7 +34,7 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
 
     val durationDistanceTrackingMap = DurationDistanceTrackingMap(airports)
 
-    durationDistanceTrackingMap should have size(airports.size)
+    durationDistanceTrackingMap should have size airports.size
   }
 
   it should "initiate departure airport duration tracking as 0" in {
@@ -47,16 +47,14 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
     durationDistanceTrackingMap(Airport("DUB")) should be(TrackingPath(isInitiated = false, Seq()))
   }
 
-  it should "update duration tracking to given arrival if duration at get that does not exist" in {
+  it should "update duration tracking to given arrival if duration to get that does not exist" in {
     val airports = Routes.groupAirports(providedRoutes)
 
     val durationDistanceTrackingMap = DurationDistanceTrackingMap(airports)
 
-    durationDistanceTrackingMap.setDurationOfDepartureToZero(Airport("DUB"))
-
     // act
     durationDistanceTrackingMap
-      .reduceDurationToArrivalIfRouteIsFaster(durationDistanceTrackingMap(Airport("DUB")),
+      .reduceDurationToArrivalIfRouteIsFaster(TrackingPath(),
         Routes.Route(Airport("DUB"), Airport("LHR"), 2))
 
     // assert
@@ -69,19 +67,43 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
 
     val durationDistanceTrackingMap = DurationDistanceTrackingMap(airports)
 
-    durationDistanceTrackingMap.setDurationOfDepartureToZero(Airport("DUB"))
-
     durationDistanceTrackingMap
-      .reduceDurationToArrivalIfRouteIsFaster(durationDistanceTrackingMap(Airport("DUB")),
+      .reduceDurationToArrivalIfRouteIsFaster(TrackingPath(),
         Routes.Route(Airport("DUB"), Airport("LHR"), 2))
 
     // act
     durationDistanceTrackingMap
-      .reduceDurationToArrivalIfRouteIsFaster(durationDistanceTrackingMap(Airport("DUB")),
-        Routes.Route(Airport("DUB"), Airport("LHR"), 1))
+      .reduceDurationToArrivalIfRouteIsFaster(TrackingPath(),
+        Routes.Route(Airport("SNN"), Airport("LHR"), 1))
 
     // assert
-    durationDistanceTrackingMap(Airport("LHR")) should be(Some(1))
+    durationDistanceTrackingMap(Airport("LHR")) should
+      be(TrackingPath(isInitiated = true, Seq(Route(Airport("SNN"), Airport("LHR"), 1))))
+  }
+
+  it should "update duration tracking to given arrival " +
+    "if duration to get that from other path is smaller then its current value" in {
+    val airports = Routes.groupAirports(providedRoutes)
+
+    val durationDistanceTrackingMap = DurationDistanceTrackingMap(airports)
+
+    durationDistanceTrackingMap
+      .reduceDurationToArrivalIfRouteIsFaster(TrackingPath(),
+        Routes.Route(Airport("DUB"), Airport("SYD"), 21))
+
+    // act
+    durationDistanceTrackingMap
+      .reduceDurationToArrivalIfRouteIsFaster(TrackingPath(),
+        Routes.Route(Airport("DUB"), Airport("LHR"), 1))
+
+    durationDistanceTrackingMap
+      .reduceDurationToArrivalIfRouteIsFaster(durationDistanceTrackingMap(Airport("LHR")),
+        Routes.Route(Airport("LHR"), Airport("SYD"), 10))
+
+    // assert
+    durationDistanceTrackingMap(Airport("SYD")) should
+      be(TrackingPath(isInitiated = true, Seq(Routes.Route(Airport("DUB"), Airport("LHR"), 1),
+        Routes.Route(Airport("LHR"), Airport("SYD"), 10))))
   }
 
   it should "not update duration tracking to given arrival if duration to get that is bigger than its current value" in {
@@ -103,40 +125,6 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
     // assert
     durationDistanceTrackingMap(Airport("LHR")) should
       be(TrackingPath(isInitiated = true, Seq(Route(Airport("DUB"),Airport("LHR"), 2))))
-  }
-
-  it should "generate expected map based on control routes" in {
-    val subsetRoutes = Seq(
-      Routes.Route(Airport("DUB"), Airport("LHR"), 4),
-      Routes.Route(Airport("DUB"), Airport("CDG"), 1),
-      Routes.Route(Airport("CDG"), Airport("LHR"), 2),
-      Routes.Route(Airport("CDG"), Airport("BKK"), 5),
-      Routes.Route(Airport("LHR"), Airport("BKK"), 1),
-      Routes.Route(Airport("BKK"), Airport("LAX"), 3)
-    )
-
-    val airports = Routes.groupAirports(subsetRoutes)
-
-    val durationDistanceTrackingMap = DurationDistanceTrackingMap(airports)
-
-    durationDistanceTrackingMap.setDurationOfDepartureToZero(Airport("DUB"))
-
-    pending
-
-    // act
-//    durationDistanceTrackingMap.reduceDurationToArrivalIfRouteIsFaster(Some(0), Routes.Route(Airport("DUB"), Airport("LHR"), 4))
-//    durationDistanceTrackingMap.reduceDurationToArrivalIfRouteIsFaster(Some(0), Routes.Route(Airport("DUB"), Airport("CDG"), 1))
-//    durationDistanceTrackingMap.reduceDurationToArrivalIfRouteIsFaster(Some(1), Routes.Route(Airport("CDG"), Airport("LHR"), 2))
-//    durationDistanceTrackingMap.reduceDurationToArrivalIfRouteIsFaster(Some(1), Routes.Route(Airport("CDG"), Airport("BKK"), 5))
-//    durationDistanceTrackingMap.reduceDurationToArrivalIfRouteIsFaster(Some(3), Routes.Route(Airport("LHR"), Airport("BKK"), 1))
-//    durationDistanceTrackingMap.reduceDurationToArrivalIfRouteIsFaster(Some(4), Routes.Route(Airport("BKK"), Airport("LAX"), 3))
-//
-//    // assert
-//    durationDistanceTrackingMap(Airport("DUB")) should be(Some(0))
-//    durationDistanceTrackingMap(Airport("LHR")) should be(Some(3))
-//    durationDistanceTrackingMap(Airport("CDG")) should be(Some(1))
-//    durationDistanceTrackingMap(Airport("BKK")) should be(Some(4))
-//    durationDistanceTrackingMap(Airport("LAX")) should be(Some(7))
   }
 
   "Lazy Dijkstra Path Finder" should "return shortest distance to all airports" in {
