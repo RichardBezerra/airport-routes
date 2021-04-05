@@ -4,6 +4,30 @@ import Routes.Airport
 import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
 
+trait ShortestPathFinder {
+  def findShortestPath(availableRoutes: Seq[Routes.Route],
+                       departure: Airport,
+                       arrival: Airport): DirectedCycleGraphFinder => Try[Seq[Routes.Route]] = { finder =>
+
+    val airports = availableRoutes.flatMap(r => Set(r.departure, r.arrival))
+
+    if (!airports.contains(departure) || !airports.contains(arrival)) {
+      Failure(InvalidAirport)
+    } else if (departure == arrival) {
+      Failure(DepartureEqualToArrival)
+    } else {
+      Failure(new RuntimeException)
+    }
+  }
+}
+
+trait DirectedCycleGraphFinder {
+  def find(graph: Map[Airport, Seq[Routes.Route]],
+           currentIterationAirport: Airport,
+           priorityQueue: mutable.PriorityQueue[(Airport, TrackingPath)],
+           durationDistanceTracking: DurationDistanceTracking): Try[DurationDistanceTracking]
+}
+
 trait DijkstraPathFinder {
   def dijkstra(graph: Map[Airport, Seq[Routes.Route]],
                departure: Airport,

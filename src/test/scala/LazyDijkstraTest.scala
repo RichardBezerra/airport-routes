@@ -5,7 +5,7 @@ import org.scalatest.matchers.must.Matchers
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import scala.collection.mutable
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 class LazyDijkstraTest extends AnyFlatSpec with Matchers {
   "RouteDurationReverseOrdering" should "enqueue items following priority" in {
@@ -217,9 +217,13 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
   }
 
   it should "return a failure when departure airport is not in the provided list" in {
-    pending
+    val finder = new ShortestPathFinder { }
 
-    val path = LazyDijkstra.findShortestPath(null, Airport("SNN"), Airport("LAS"), Set(), null)
+    val path = finder.findShortestPath(Routes.providedRoutes,
+      Airport("SNN"),
+      Airport("LAS"))((_: Map[Airport, Seq[Route]], _: Airport,
+                       _: mutable.PriorityQueue[(Airport, TrackingPath)],
+                       _: DurationDistanceTracking) => ???)
 
     path match {
       case Failure(failure) => failure should be (InvalidAirport)
@@ -228,9 +232,13 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
   }
   
   it should "return a failure when arrival airport is not in the provided list" in {
-    pending
+    val finder = new ShortestPathFinder { }
 
-    val path = LazyDijkstra.findShortestPath(null, Airport("LAS"), Airport("SNN"), Set(), null)
+    val path = finder.findShortestPath(Routes.providedRoutes,
+      Airport("LAS"),
+      Airport("SNN"))((_: Map[Airport, Seq[Route]], _: Airport,
+                       _: mutable.PriorityQueue[(Airport, TrackingPath)],
+                       _: DurationDistanceTracking) => ???)
 
     path match {
       case Failure(failure) => failure should be (InvalidAirport)
