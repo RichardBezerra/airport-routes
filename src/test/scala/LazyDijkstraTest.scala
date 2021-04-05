@@ -204,7 +204,6 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
                        _: Set[Airport],
                        _: Airport,
                        _: Airport,
-                       _: mutable.PriorityQueue[(Airport, HoursTrackPathValue)],
                        _: HoursTrack) => { })
 
     path match {
@@ -222,7 +221,6 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
                        _: Set[Airport],
                        _: Airport,
                        _: Airport,
-                       _: mutable.PriorityQueue[(Airport, HoursTrackPathValue)],
                        _: HoursTrack) => ???)
 
     path match {
@@ -240,7 +238,6 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
                        _: Set[Airport],
                        _: Airport,
                        _: Airport,
-                       _: mutable.PriorityQueue[(Airport, HoursTrackPathValue)],
                        _: HoursTrack) => ???)
 
     path match {
@@ -258,7 +255,6 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
                        _: Set[Airport],
                        _: Airport,
                        _: Airport,
-                       _: mutable.PriorityQueue[(Airport, HoursTrackPathValue)],
                        _: HoursTrack) => ???)
 
     path match {
