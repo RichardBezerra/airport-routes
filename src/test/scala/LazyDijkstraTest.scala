@@ -8,19 +8,6 @@ import scala.collection.mutable
 import scala.util.{Failure, Success}
 
 class LazyDijkstraTest extends AnyFlatSpec with Matchers {
-  "RouteDurationReverseOrdering" should "enqueue items following priority" in {
-    val routesPQ = mutable.PriorityQueue()(RouteDurationReverseOrdering)
-
-    providedRoutes.foreach(r => routesPQ.enqueue((r.arrival, HoursTrackPathValue(Seq(r)))))
-
-    routesPQ.dequeue()._2.totalDuration should be(1)
-
-    routesPQ.dequeue()._2.totalDuration should be(2)
-
-    routesPQ.enqueue((Airport("A"), HoursTrackPathValue(Seq(Routes.Route(Airport("A"), Airport("B"), 1)))))
-
-    routesPQ.dequeue()._2.totalDuration should be(1)
-  }
 
   "DurationDistanceTrackingMap" should "be created using a list of airports" in {
     val airports = Routes.groupAirports(providedRoutes)

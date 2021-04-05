@@ -20,10 +20,6 @@ trait ShortestPathFinder {
 
       hoursDistanceTracking.setDurationToZero(departure)
 
-      val routesPriorityQueue = mutable.PriorityQueue()(RouteDurationReverseOrdering)
-
-      routesPriorityQueue.enqueue((departure, HoursTrackPathValue.notInitiated))
-
       finder.fillHoursTrack(graph, allAirports, departure, arrival, hoursDistanceTracking)
 
       hoursDistanceTracking
@@ -36,14 +32,7 @@ trait ShortestPathFinder {
 }
 
 trait DirectedCycleGraphFinder {
-
   def fillHoursTrack(graph: Map[Airport, Seq[Routes.Route]], allAirports: Set[Airport], currentIterationAirport: Airport, arrival: Airport, hoursTrack: HoursTrack): Unit
-}
-
-object RouteDurationReverseOrdering extends Ordering[(Airport, HoursTrackPathValue)] {
-  override def compare(x: (Airport, HoursTrackPathValue), y: (Airport, HoursTrackPathValue)): Int = {
-    -x._2.totalDuration.compare(y._2.totalDuration)
-  }
 }
 
 case class HoursTrackPathValue(routes: Seq[Routes.Route]) {
@@ -87,16 +76,24 @@ class HoursTrack extends mutable.HashMap[Airport, HoursTrackPathValue] {
 
 object HoursTrack {
   def apply(airports: Set[Airport]): HoursTrack = {
-    val durationDistanceTrackingMap = new HoursTrack()
-    durationDistanceTrackingMap.addAll(airports.map((_, HoursTrackPathValue.notInitiated)))
+    new HoursTrack().addAll(airports.map((_, HoursTrackPathValue.notInitiated)))
   }
 }
 
 object LazyDijkstra extends ShortestPathFinder with DirectedCycleGraphFinder {
 
-  override def fillHoursTrack(graph: Map[Airport, Seq[Routes.Route]], allAirports: Set[Airport], departure: Airport, arrival: Airport, hoursTrack: HoursTrack): Unit = {
+  lazy val hoursTrackReverseOrdering: Ordering[(Airport, HoursTrackPathValue)] = (x: (Airport, HoursTrackPathValue),
+                                                                             y: (Airport, HoursTrackPathValue)) => {
+    -x._2.totalDuration.compare(y._2.totalDuration)
+  }
 
-    val routesPriorityQueue = mutable.PriorityQueue()(RouteDurationReverseOrdering)
+  override def fillHoursTrack(graph: Map[Airport, Seq[Routes.Route]],
+                              allAirports: Set[Airport],
+                              departure: Airport,
+                              arrival: Airport,
+                              hoursTrack: HoursTrack): Unit = {
+
+    val routesPriorityQueue = mutable.PriorityQueue()(hoursTrackReverseOrdering)
 
     routesPriorityQueue.enqueue((departure, HoursTrackPathValue.notInitiated))
 
