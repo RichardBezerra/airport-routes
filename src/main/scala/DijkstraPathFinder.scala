@@ -16,13 +16,13 @@ trait ShortestPathFinder {
     else {
       val graph = Routes.buildGraph(availableRoutes)
 
-      val hoursDistanceTracking = DurationDistanceTracking(allAirports)
+      val hoursDistanceTracking = HoursTrack(allAirports)
 
       hoursDistanceTracking.setDurationOfDepartureToZero(departure)
 
       val routesPriorityQueue = mutable.PriorityQueue()(RouteDurationReverseOrdering)
 
-      routesPriorityQueue.enqueue((departure, TrackingPath.notInitiated))
+      routesPriorityQueue.enqueue((departure, HoursTrackPathValue.notInitiated))
 
       finder.find(graph, allAirports, departure, arrival, routesPriorityQueue, hoursDistanceTracking)
 
@@ -41,46 +41,46 @@ trait DirectedCycleGraphFinder {
            allAirports: Set[Airport],
            currentIterationAirport: Airport,
            arrival: Airport,
-           priorityQueue: mutable.PriorityQueue[(Airport, TrackingPath)],
-           durationDistanceTracking: DurationDistanceTracking)
+           priorityQueue: mutable.PriorityQueue[(Airport, HoursTrackPathValue)],
+           durationDistanceTracking: HoursTrack)
 }
 
-object RouteDurationReverseOrdering extends Ordering[(Airport, TrackingPath)] {
-  override def compare(x: (Airport, TrackingPath), y: (Airport, TrackingPath)): Int = {
+object RouteDurationReverseOrdering extends Ordering[(Airport, HoursTrackPathValue)] {
+  override def compare(x: (Airport, HoursTrackPathValue), y: (Airport, HoursTrackPathValue)): Int = {
     -x._2.totalDuration.compare(y._2.totalDuration)
   }
 }
 
-case class TrackingPath(routes: Seq[Routes.Route]) {
+case class HoursTrackPathValue(routes: Seq[Routes.Route]) {
   val totalDuration: Int = routes.map(_.durationHours).sum
 }
 
-object TrackingPath {
-  def apply(): TrackingPath = new TrackingPath(Seq())
+object HoursTrackPathValue {
+  def apply(): HoursTrackPathValue = new HoursTrackPathValue(Seq())
 
-  def apply(routes: Seq[Routes.Route]): TrackingPath = new TrackingPath(routes)
+  def apply(routes: Seq[Routes.Route]): HoursTrackPathValue = new HoursTrackPathValue(routes)
 
-  val notInitiated: TrackingPath = new TrackingPath(Seq())
+  val notInitiated: HoursTrackPathValue = new HoursTrackPathValue(Seq())
 }
 
-class DurationDistanceTracking extends mutable.HashMap[Airport, TrackingPath] {
+class HoursTrack extends mutable.HashMap[Airport, HoursTrackPathValue] {
   def setDurationOfDepartureToZero(departure: Airport): Unit = {
-    this.put(departure, TrackingPath())
+    this.put(departure, HoursTrackPathValue())
   }
 
-  def reduceDurationToArrivalIfRouteIsFaster(currentTracking: TrackingPath,
-                                             route: Routes.Route): Option[(Airport, TrackingPath)] = {
+  def reduceDurationToArrivalIfRouteIsFaster(currentTracking: HoursTrackPathValue,
+                                             route: Routes.Route): Option[(Airport, HoursTrackPathValue)] = {
     this (route.arrival) match {
-      case TrackingPath.notInitiated =>
-        val firstTrackingPath = TrackingPath(currentTracking.routes :+ route)
+      case HoursTrackPathValue.notInitiated =>
+        val firstTrackingPath = HoursTrackPathValue(currentTracking.routes :+ route)
         this.put(route.arrival, firstTrackingPath)
         Some((route.arrival, firstTrackingPath))
 
-      case arrivalTracking : TrackingPath =>
+      case arrivalTracking : HoursTrackPathValue =>
         currentTracking match {
-          case tracking @ TrackingPath(routes)
+          case tracking @ HoursTrackPathValue(routes)
             if tracking.totalDuration + route.durationHours < arrivalTracking.totalDuration =>
-            val fasterTrackingPath = TrackingPath(routes :+ route)
+            val fasterTrackingPath = HoursTrackPathValue(routes :+ route)
             this.put(route.arrival, fasterTrackingPath)
             Some((route.arrival, fasterTrackingPath))
 
@@ -90,10 +90,10 @@ class DurationDistanceTracking extends mutable.HashMap[Airport, TrackingPath] {
   }
 }
 
-object DurationDistanceTracking {
-  def apply(airports: Set[Airport]): DurationDistanceTracking = {
-    val durationDistanceTrackingMap = new DurationDistanceTracking()
-    durationDistanceTrackingMap.addAll(airports.map((_, TrackingPath.notInitiated)))
+object HoursTrack {
+  def apply(airports: Set[Airport]): HoursTrack = {
+    val durationDistanceTrackingMap = new HoursTrack()
+    durationDistanceTrackingMap.addAll(airports.map((_, HoursTrackPathValue.notInitiated)))
   }
 }
 
@@ -103,7 +103,7 @@ object LazyDijkstra extends DirectedCycleGraphFinder with ShortestPathFinder {
                                 departure: Airport,
                                 arrival: Airport,
                                 allAirports: Set[Airport],
-                                dijkstra: DurationDistanceTracking): Try[(Seq[Routes.Route], Int)] = {
+                                dijkstra: HoursTrack): Try[(Seq[Routes.Route], Int)] = {
 
     if (departure == arrival) {
       Failure(DepartureEqualToArrival)
@@ -124,8 +124,8 @@ object LazyDijkstra extends DirectedCycleGraphFinder with ShortestPathFinder {
                     allAirports: Set[Airport],
                     currentIterationAirport: Airport,
                     arrival: Airport,
-                    routesPriorityQueue: mutable.PriorityQueue[(Airport, TrackingPath)],
-                    durationDistanceTracking: DurationDistanceTracking): Unit = {
+                    routesPriorityQueue: mutable.PriorityQueue[(Airport, HoursTrackPathValue)],
+                    durationDistanceTracking: HoursTrack): Unit = {
 
     val visitedAirports: mutable.HashMap[Airport, Boolean] = mutable.HashMap.from(allAirports.map((_, false)))
 
