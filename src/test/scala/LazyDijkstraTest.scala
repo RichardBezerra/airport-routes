@@ -5,7 +5,7 @@ import org.scalatest.matchers.must.Matchers
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import scala.collection.mutable
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Success}
 
 class LazyDijkstraTest extends AnyFlatSpec with Matchers {
   "RouteDurationReverseOrdering" should "enqueue items following priority" in {
@@ -192,12 +192,33 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
     }
   }
 
+  "ShortestPathFinder" should "find shortest duration from a departure to an arrival when routes are expanded " +
+    "to include returning routes" in {
+    val expandedRoutes = addReturningRoutes(Routes.providedRoutes)
+
+    // act
+    val shortestPath = LazyDijkstra.findShortestPath(expandedRoutes, Airport("SYD"), Airport("DUB"))(LazyDijkstra)
+
+    // assert
+    shortestPath match {
+      case Success(shortestPath) =>
+        shortestPath should be(
+          Seq(Route(Airport("SYD"), Airport("BKK"), 11),
+            Route(Airport("BKK"), Airport("LHR"), 9),
+            Route(Airport("LHR"), Airport("DUB"), 1)))
+
+      case Failure(failure) => fail(failure)
+    }
+  }
+
   it should "return a failure when arrival airport is unreachable from the departure" in {
     val finder = new ShortestPathFinder { }
 
     val path = finder.findShortestPath(Routes.providedRoutes,
       Airport("DUB"),
       Airport("LAS"))((_: Map[Airport, Seq[Route]],
+                       _: Set[Airport],
+                       _: Airport,
                        _: Airport,
                        _: mutable.PriorityQueue[(Airport, TrackingPath)],
                        _: DurationDistanceTracking) => { })
@@ -223,6 +244,8 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
     val path = finder.findShortestPath(Routes.providedRoutes,
       Airport("SNN"),
       Airport("LAS"))((_: Map[Airport, Seq[Route]],
+                       _: Set[Airport],
+                       _: Airport,
                        _: Airport,
                        _: mutable.PriorityQueue[(Airport, TrackingPath)],
                        _: DurationDistanceTracking) => ???)
@@ -238,7 +261,10 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
 
     val path = finder.findShortestPath(Routes.providedRoutes,
       Airport("LAS"),
-      Airport("SNN"))((_: Map[Airport, Seq[Route]], _: Airport,
+      Airport("SNN"))((_: Map[Airport, Seq[Route]],
+                       _: Set[Airport],
+                       _: Airport,
+                       _: Airport,
                        _: mutable.PriorityQueue[(Airport, TrackingPath)],
                        _: DurationDistanceTracking) => ???)
 
