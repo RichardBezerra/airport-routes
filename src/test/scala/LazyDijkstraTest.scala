@@ -193,13 +193,14 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
   }
 
   it should "return a failure when arrival airport is unreachable from the departure" in {
-    val allAirports = Routes.groupAirports(Routes.providedRoutes)
+    val finder = new ShortestPathFinder { }
 
-    val graph = buildGraph(Routes.providedRoutes)
-
-    val dijkstra = LazyDijkstra.dijkstra(graph, Airport("LAS"), Airport("DUB"), allAirports).get
-
-    val path = LazyDijkstra.findShortestPath(graph, Airport("LAS"), Airport("DUB"), allAirports, dijkstra)
+    val path = finder.findShortestPath(Routes.providedRoutes,
+      Airport("DUB"),
+      Airport("LAS"))((_: Map[Airport, Seq[Route]],
+                       _: Airport,
+                       _: mutable.PriorityQueue[(Airport, TrackingPath)],
+                       _: DurationDistanceTracking) => { })
 
     path match {
       case Failure(failure) => failure should be (NoRoutesFound)
@@ -221,7 +222,8 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
 
     val path = finder.findShortestPath(Routes.providedRoutes,
       Airport("SNN"),
-      Airport("LAS"))((_: Map[Airport, Seq[Route]], _: Airport,
+      Airport("LAS"))((_: Map[Airport, Seq[Route]],
+                       _: Airport,
                        _: mutable.PriorityQueue[(Airport, TrackingPath)],
                        _: DurationDistanceTracking) => ???)
 
