@@ -1,7 +1,6 @@
 import Routes.Airport
 
 import scala.collection.mutable
-import scala.util.control.Breaks.{break, breakable}
 import scala.util.{Success, Try}
 
 trait DijkstraPathFinder {
