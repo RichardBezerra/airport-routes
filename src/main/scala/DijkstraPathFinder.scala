@@ -31,6 +31,8 @@ object TrackingPath {
   def apply(): TrackingPath = new TrackingPath(false, Seq())
 
   def apply(routes: Seq[Routes.Route]): TrackingPath = new TrackingPath(true, routes)
+
+  val notInitiated: TrackingPath = new TrackingPath(false, Seq())
 }
 
 class DurationDistanceTracking extends mutable.HashMap[Airport, TrackingPath] {
@@ -40,6 +42,8 @@ class DurationDistanceTracking extends mutable.HashMap[Airport, TrackingPath] {
 
   def reduceDurationToArrivalIfRouteIsFaster(currentTracking: TrackingPath, route: Routes.Route): Option[(Airport, TrackingPath)] = {
     val newDuration = this (route.arrival) match {
+      case TrackingPath.notInitiated => TrackingPath(currentTracking.routes :+ route)
+
       case arrivalTracking @ TrackingPath(true, _) =>
         currentTracking match {
           case tracking @ TrackingPath(_, routes) =>
@@ -49,10 +53,9 @@ class DurationDistanceTracking extends mutable.HashMap[Airport, TrackingPath] {
               TrackingPath()
             }
         }
-      case _ => TrackingPath(currentTracking.routes :+ route)
     }
 
-    if (newDuration.isInitiated) {
+    if (newDuration != TrackingPath.notInitiated) {
       this.put(route.arrival, newDuration)
       Some((route.arrival, newDuration))
     } else {
@@ -64,7 +67,7 @@ class DurationDistanceTracking extends mutable.HashMap[Airport, TrackingPath] {
 object DurationDistanceTracking {
   def apply(airports: Set[Airport]): DurationDistanceTracking = {
     val durationDistanceTrackingMap = new DurationDistanceTracking()
-    durationDistanceTrackingMap.addAll(airports.map((_, TrackingPath())))
+    durationDistanceTrackingMap.addAll(airports.map((_, TrackingPath.notInitiated)))
   }
 }
 
