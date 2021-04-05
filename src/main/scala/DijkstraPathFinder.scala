@@ -24,7 +24,7 @@ trait ShortestPathFinder {
 
       routesPriorityQueue.enqueue((departure, HoursTrackPathValue.notInitiated))
 
-      finder.fillHoursTrack(graph, allAirports, departure, arrival, routesPriorityQueue, hoursDistanceTracking)
+      finder.fillHoursTrack(graph, allAirports, departure, arrival, hoursDistanceTracking)
 
       hoursDistanceTracking
         .get(arrival)
@@ -37,12 +37,7 @@ trait ShortestPathFinder {
 
 trait DirectedCycleGraphFinder {
 
-  def fillHoursTrack(graph: Map[Airport, Seq[Routes.Route]],
-                     allAirports: Set[Airport],
-                     currentIterationAirport: Airport,
-                     arrival: Airport,
-                     priorityQueue: mutable.PriorityQueue[(Airport, HoursTrackPathValue)],
-                     hoursTrack: HoursTrack)
+  def fillHoursTrack(graph: Map[Airport, Seq[Routes.Route]], allAirports: Set[Airport], currentIterationAirport: Airport, arrival: Airport, hoursTrack: HoursTrack): Unit
 }
 
 object RouteDurationReverseOrdering extends Ordering[(Airport, HoursTrackPathValue)] {
@@ -97,14 +92,13 @@ object HoursTrack {
   }
 }
 
-object LazyDijkstra extends DirectedCycleGraphFinder with ShortestPathFinder {
+object LazyDijkstra extends ShortestPathFinder with DirectedCycleGraphFinder {
 
-  override def fillHoursTrack(graph: Map[Airport, Seq[Routes.Route]],
-                              allAirports: Set[Airport],
-                              currentIterationAirport: Airport,
-                              arrival: Airport,
-                              routesPriorityQueue: mutable.PriorityQueue[(Airport, HoursTrackPathValue)],
-                              hoursTrack: HoursTrack): Unit = {
+  override def fillHoursTrack(graph: Map[Airport, Seq[Routes.Route]], allAirports: Set[Airport], departure: Airport, arrival: Airport, hoursTrack: HoursTrack): Unit = {
+
+    val routesPriorityQueue = mutable.PriorityQueue()(RouteDurationReverseOrdering)
+
+    routesPriorityQueue.enqueue((departure, HoursTrackPathValue.notInitiated))
 
     val visitedAirports: mutable.HashMap[Airport, Boolean] = mutable.HashMap.from(allAirports.map((_, false)))
 
