@@ -8,13 +8,13 @@ trait DijkstraPathFinder {
   def dijkstra(graph: Map[Airport, Seq[Routes.Route]],
                departure: Airport,
                arrival: Airport,
-               allAirports: Set[Airport]): Try[DurationDistanceTrackingMap]
+               allAirports: Set[Airport]): Try[DurationDistanceTracking]
 
   def findShortestPath(graph: Map[Airport, Seq[Routes.Route]],
                        departure: Airport,
                        arrival: Airport,
                        allAirports: Set[Airport],
-                       dijkstra: DurationDistanceTrackingMap): Try[(Seq[Routes.Route], Int)]
+                       dijkstra: DurationDistanceTracking): Try[(Seq[Routes.Route], Int)]
 }
 
 object RouteDurationReverseOrdering extends Ordering[(Airport, TrackingPath)] {
@@ -33,7 +33,7 @@ object TrackingPath {
   def apply(routes: Seq[Routes.Route]): TrackingPath = new TrackingPath(true, routes)
 }
 
-class DurationDistanceTrackingMap extends mutable.HashMap[Airport, TrackingPath] {
+class DurationDistanceTracking extends mutable.HashMap[Airport, TrackingPath] {
   def setDurationOfDepartureToZero(departure: Airport): Unit = {
     this.put(departure, TrackingPath())
   }
@@ -61,9 +61,9 @@ class DurationDistanceTrackingMap extends mutable.HashMap[Airport, TrackingPath]
   }
 }
 
-object DurationDistanceTrackingMap {
-  def apply(airports: Set[Airport]): DurationDistanceTrackingMap = {
-    val durationDistanceTrackingMap = new DurationDistanceTrackingMap()
+object DurationDistanceTracking {
+  def apply(airports: Set[Airport]): DurationDistanceTracking = {
+    val durationDistanceTrackingMap = new DurationDistanceTracking()
     durationDistanceTrackingMap.addAll(airports.map((_, TrackingPath())))
   }
 }
@@ -72,11 +72,11 @@ object LazyDijkstra extends DijkstraPathFinder {
   override def dijkstra(graph: Map[Airport, Seq[Routes.Route]],
                         departure: Airport,
                         arrival: Airport,
-                        allAirports: Set[Airport]): Try[DurationDistanceTrackingMap] = {
+                        allAirports: Set[Airport]): Try[DurationDistanceTracking] = {
 
-    var visitedAirports: Seq[Airport] = Seq()
+    val visitedAirports: mutable.HashMap[Airport, Boolean] = mutable.HashMap.from(allAirports.map((_, false)))
 
-    val durationDistanceTrackingMap = DurationDistanceTrackingMap(allAirports)
+    val durationDistanceTrackingMap = DurationDistanceTracking(allAirports)
 
     durationDistanceTrackingMap.setDurationOfDepartureToZero(departure)
 
@@ -88,7 +88,7 @@ object LazyDijkstra extends DijkstraPathFinder {
 
     while (routesPriorityQueue.nonEmpty && !arrivalFound) {
       val currentRoute = routesPriorityQueue.dequeue()
-      visitedAirports = visitedAirports :+ currentRoute._1
+      visitedAirports.put(currentRoute._1, true)
 
       val isDurationToArrivalFaster =
         durationDistanceTrackingMap(currentRoute._1).totalDuration < currentRoute._2.totalDuration
@@ -96,7 +96,7 @@ object LazyDijkstra extends DijkstraPathFinder {
       if (!isDurationToArrivalFaster) {
 
         graph(currentRoute._1).foreach(route => {
-          if (!visitedAirports.contains(route.arrival)) {
+          if (!visitedAirports(route.arrival)) {
             val currentDurationAtDeparture = durationDistanceTrackingMap(currentRoute._1)
 
             durationDistanceTrackingMap
@@ -116,7 +116,7 @@ object LazyDijkstra extends DijkstraPathFinder {
                                 departure: Airport,
                                 arrival: Airport,
                                 allAirports: Set[Airport],
-                                dijkstra: DurationDistanceTrackingMap): Try[(Seq[Routes.Route], Int)] = {
+                                dijkstra: DurationDistanceTracking): Try[(Seq[Routes.Route], Int)] = {
 
     if (departure == arrival) {
       Failure(DepartureEqualToArrival)
