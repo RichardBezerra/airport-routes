@@ -22,11 +22,11 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
   }
 
   "TrackingPath" should "add route when is not initiated" in {
-
+    pending
   }
 
   it should "add route when is final duration is smaller than its current one" in {
-
+    pending
   }
 
   "DurationDistanceTrackingMap" should "be created using a list of airports" in {
@@ -147,7 +147,8 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
     }
   }
 
-  it should "return shortest duration to given arrival" in {val expandedRoutes = Routes.providedRoutes
+  it should "find shortest duration from a departure to an arrival" in {
+    val expandedRoutes = Routes.providedRoutes
     val numberOfAirports = Routes.groupAirports(expandedRoutes).size
 
     val graph = buildGraph(expandedRoutes)
@@ -169,5 +170,37 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
 
       case Failure(failure) => fail(failure)
     }
+  }
+
+  it should "find shortest duration from a departure to an arrival when routes are expanded " +
+    "to include returning routes" in {
+    val expandedRoutes = addReturningRoutes(Routes.providedRoutes)
+
+    val numberOfAirports = Routes.groupAirports(expandedRoutes).size
+
+    val directedCyclicalGraph = buildGraph(expandedRoutes)
+
+    val dijkstra = LazyDijkstra.dijkstra(directedCyclicalGraph, Airport("SYD"), Airport("DUB"), numberOfAirports).get
+
+    // act
+    val shortestPath = LazyDijkstra.findShortestPath(directedCyclicalGraph, Airport("SYD"), Airport("DUB"), numberOfAirports, dijkstra)
+
+    // assert
+    shortestPath match {
+      case Success((shortestPath, duration)) =>
+        shortestPath should be(
+          Seq(Route(Airport("SYD"), Airport("BKK"), 11),
+            Route(Airport("BKK"), Airport("LHR"), 9),
+            Route(Airport("LHR"), Airport("DUB"), 1)))
+
+        duration should be(21)
+
+      case Failure(failure) => fail(failure)
+    }
+  }
+
+  def addReturningRoutes(providedRoutes: Seq[Routes.Route]): Seq[Routes.Route] = {
+    providedRoutes :++ providedRoutes
+      .map(currentRoute => Routes.Route(currentRoute.arrival, currentRoute.departure, currentRoute.durationHours))
   }
 }
