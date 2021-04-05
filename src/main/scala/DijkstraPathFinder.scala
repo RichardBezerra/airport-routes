@@ -23,7 +23,7 @@ object RouteDurationReverseOrdering extends Ordering[(Airport, TrackingPath)] {
 }
 
 case class TrackingPath(isInitiated: Boolean, routes: Seq[Routes.Route]) {
-  def totalDuration: Int = if (isInitiated) routes.map(_.durationHours).sum else 100000
+  def totalDuration: Int = routes.map(_.durationHours).sum
 }
 
 object TrackingPath {
