@@ -8,12 +8,12 @@ trait DijkstraPathFinder {
   def dijkstra(graph: Map[Airport, Seq[Routes.Route]],
                departure: Airport,
                arrival: Airport,
-               numberOfAirports: Int): Try[DurationDistanceTrackingMap]
+               allAirports: Set[Airport]): Try[DurationDistanceTrackingMap]
 
   def findShortestPath(graph: Map[Airport, Seq[Routes.Route]],
                        departure: Airport,
                        arrival: Airport,
-                       numberOfAirports: Int,
+                       allAirports: Set[Airport],
                        dijkstra: DurationDistanceTrackingMap): Try[(Seq[Routes.Route], Int)]
 }
 
@@ -72,11 +72,11 @@ object LazyDijkstra extends DijkstraPathFinder {
   override def dijkstra(graph: Map[Airport, Seq[Routes.Route]],
                         departure: Airport,
                         arrival: Airport,
-                        numberOfAirports: Int): Try[DurationDistanceTrackingMap] = {
+                        allAirports: Set[Airport]): Try[DurationDistanceTrackingMap] = {
 
     var visitedAirports: Seq[Airport] = Seq()
 
-    val durationDistanceTrackingMap = DurationDistanceTrackingMap(Routes.groupAirports(Routes.providedRoutes))
+    val durationDistanceTrackingMap = DurationDistanceTrackingMap(allAirports)
 
     durationDistanceTrackingMap.setDurationOfDepartureToZero(departure)
 
@@ -115,7 +115,7 @@ object LazyDijkstra extends DijkstraPathFinder {
   override def findShortestPath(graph: Map[Airport, Seq[Routes.Route]],
                                 departure: Airport,
                                 arrival: Airport,
-                                numberOfAirports: Int,
+                                allAirports: Set[Airport],
                                 dijkstra: DurationDistanceTrackingMap): Try[(Seq[Routes.Route], Int)] = {
 
     if (departure == arrival) {

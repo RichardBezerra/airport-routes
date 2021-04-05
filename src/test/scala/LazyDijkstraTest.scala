@@ -130,12 +130,11 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
 
   "Lazy Dijkstra Path Finder" should "return shortest duration to all airports" in {
     val expandedRoutes = Routes.providedRoutes
-    val numberOfAirports = Routes.groupAirports(expandedRoutes).size
 
     val graph = buildGraph(expandedRoutes)
 
     // act
-    LazyDijkstra.dijkstra(graph, Airport("DUB"), Airport("LAS"), numberOfAirports) match {
+    LazyDijkstra.dijkstra(graph, Airport("DUB"), Airport("LAS"), Routes.groupAirports(expandedRoutes)) match {
       case Success(value) =>
 
         // assert
@@ -150,14 +149,15 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
 
   it should "find shortest duration from a departure to an arrival" in {
     val expandedRoutes = Routes.providedRoutes
-    val numberOfAirports = Routes.groupAirports(expandedRoutes).size
 
     val graph = buildGraph(expandedRoutes)
 
-    val dijkstra = LazyDijkstra.dijkstra(graph, Airport("DUB"), Airport("SYD"), numberOfAirports).get
+    val allAirports = Routes.groupAirports(expandedRoutes)
+
+    val dijkstra = LazyDijkstra.dijkstra(graph, Airport("DUB"), Airport("SYD"), allAirports).get
 
     // act
-    val shortestPath = LazyDijkstra.findShortestPath(graph, Airport("DUB"), Airport("SYD"), numberOfAirports, dijkstra)
+    val shortestPath = LazyDijkstra.findShortestPath(graph, Airport("DUB"), Airport("SYD"), allAirports, dijkstra)
 
     // assert
     shortestPath match {
@@ -177,14 +177,14 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
     "to include returning routes" in {
     val expandedRoutes = addReturningRoutes(Routes.providedRoutes)
 
-    val numberOfAirports = Routes.groupAirports(expandedRoutes).size
+    val allAirports = Routes.groupAirports(expandedRoutes)
 
     val directedCyclicalGraph = buildGraph(expandedRoutes)
 
-    val dijkstra = LazyDijkstra.dijkstra(directedCyclicalGraph, Airport("SYD"), Airport("DUB"), numberOfAirports).get
+    val dijkstra = LazyDijkstra.dijkstra(directedCyclicalGraph, Airport("SYD"), Airport("DUB"), allAirports).get
 
     // act
-    val shortestPath = LazyDijkstra.findShortestPath(directedCyclicalGraph, Airport("SYD"), Airport("DUB"), numberOfAirports, dijkstra)
+    val shortestPath = LazyDijkstra.findShortestPath(directedCyclicalGraph, Airport("SYD"), Airport("DUB"), allAirports, dijkstra)
 
     // assert
     shortestPath match {
@@ -201,13 +201,13 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
   }
 
   it should "return a failure when arrival airport is unreachable from the departure" in {
-    val numberOfAirports = Routes.groupAirports(Routes.providedRoutes).size
+    val allAirports = Routes.groupAirports(Routes.providedRoutes)
 
     val graph = buildGraph(Routes.providedRoutes)
 
-    val dijkstra = LazyDijkstra.dijkstra(graph, Airport("LAS"), Airport("DUB"), numberOfAirports).get
+    val dijkstra = LazyDijkstra.dijkstra(graph, Airport("LAS"), Airport("DUB"), allAirports).get
 
-    val path = LazyDijkstra.findShortestPath(graph, Airport("LAS"), Airport("DUB"), numberOfAirports, dijkstra)
+    val path = LazyDijkstra.findShortestPath(graph, Airport("LAS"), Airport("DUB"), allAirports, dijkstra)
 
     path match {
       case Failure(failure) => failure should be (NoRoutesFound)
@@ -216,7 +216,7 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
   }
 
   it should "return a failure when arrival airport is the same as departure" in {
-    val path = LazyDijkstra.findShortestPath(null, Airport("LAS"), Airport("LAS"), 1, null)
+    val path = LazyDijkstra.findShortestPath(null, Airport("LAS"), Airport("LAS"), Set(), null)
 
     path match {
       case Failure(failure) => failure should be (DepartureEqualToArrival)
@@ -227,7 +227,7 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
   it should "return a failure when departure airport is not in the provided list" in {
     pending
 
-    val path = LazyDijkstra.findShortestPath(null, Airport("SNN"), Airport("LAS"), 1, null)
+    val path = LazyDijkstra.findShortestPath(null, Airport("SNN"), Airport("LAS"), Set(), null)
 
     path match {
       case Failure(failure) => failure should be (InvalidAirport)
@@ -238,7 +238,7 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
   it should "return a failure when arrival airport is not in the provided list" in {
     pending
 
-    val path = LazyDijkstra.findShortestPath(null, Airport("LAS"), Airport("SNN"), 1, null)
+    val path = LazyDijkstra.findShortestPath(null, Airport("LAS"), Airport("SNN"), Set(), null)
 
     path match {
       case Failure(failure) => failure should be (InvalidAirport)
