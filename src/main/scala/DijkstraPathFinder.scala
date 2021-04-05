@@ -13,7 +13,7 @@ trait DijkstraPathFinder {
                        departure: Airport,
                        arrival: Airport,
                        numberOfAirports: Int,
-                       dijkstra: Seq[Routes.Route]): Try[Seq[Routes.Route]]
+                       dijkstra: DurationDistanceTrackingMap): Try[(Seq[Routes.Route], Int)]
 }
 
 object RouteDurationReverseOrdering extends Ordering[(Airport, TrackingPath)] {
@@ -110,5 +110,7 @@ object LazyDijkstra extends DijkstraPathFinder {
                                 departure: Airport,
                                 arrival: Airport,
                                 numberOfAirports: Int,
-                                dijkstra: Seq[Routes.Route]): Try[Seq[Routes.Route]] = Success(Seq())
+                                dijkstra: DurationDistanceTrackingMap): Try[(Seq[Routes.Route], Int)] = {
+    Success((dijkstra(arrival).routes, dijkstra(arrival).totalDuration))
+  }
 }
