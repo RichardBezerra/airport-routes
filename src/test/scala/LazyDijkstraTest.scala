@@ -123,8 +123,8 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
   "Lazy Dijkstra Path Finder" should "return shortest duration to all airports" in {
 
     // act
-    val path = LazyDijkstra.findShortestPath(Routes.providedRoutes,
-      Airport("DUB"), Airport("LAS"))(LazyDijkstra)
+    val path = LazyDijkstra
+      .findShortestPath(Routes.providedRoutes, Airport("DUB"), Airport("LAS"))(LazyDijkstra)
 
     // assert
     path match {
@@ -139,26 +139,18 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
   }
 
   it should "find shortest duration from a departure to an arrival" in {
-    val expandedRoutes = Routes.providedRoutes
-
-    val graph = buildGraph(expandedRoutes)
-
-    val allAirports = Routes.groupAirports(expandedRoutes)
-
-    val dijkstra = LazyDijkstra.dijkstra(graph, Airport("DUB"), Airport("SYD"), allAirports).get
 
     // act
-    val shortestPath = LazyDijkstra.findShortestPath(graph, Airport("DUB"), Airport("SYD"), allAirports, dijkstra)
+    val shortestPath = LazyDijkstra
+      .findShortestPath(Routes.providedRoutes, Airport("DUB"), Airport("SYD"))(LazyDijkstra)
 
     // assert
     shortestPath match {
-      case Success((shortestPath, duration)) =>
-        shortestPath should be(
+      case Success(routes) =>
+        routes should be(
           Seq(Route(Airport("DUB"), Airport("LHR"), 1),
             Route(Airport("LHR"), Airport("BKK"), 9),
             Route(Airport("BKK"), Airport("SYD"), 11)))
-
-        duration should be(21)
 
       case Failure(failure) => fail(failure)
     }
@@ -168,24 +160,17 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
     "to include returning routes" in {
     val expandedRoutes = addReturningRoutes(Routes.providedRoutes)
 
-    val allAirports = Routes.groupAirports(expandedRoutes)
-
-    val directedCyclicalGraph = buildGraph(expandedRoutes)
-
-    val dijkstra = LazyDijkstra.dijkstra(directedCyclicalGraph, Airport("SYD"), Airport("DUB"), allAirports).get
-
     // act
-    val shortestPath = LazyDijkstra.findShortestPath(directedCyclicalGraph, Airport("SYD"), Airport("DUB"), allAirports, dijkstra)
+    val shortestPath = LazyDijkstra
+      .findShortestPath(expandedRoutes, Airport("SYD"), Airport("DUB"))(LazyDijkstra)
 
     // assert
     shortestPath match {
-      case Success((shortestPath, duration)) =>
-        shortestPath should be(
+      case Success(routes) =>
+        routes should be(
           Seq(Route(Airport("SYD"), Airport("BKK"), 11),
             Route(Airport("BKK"), Airport("LHR"), 9),
             Route(Airport("LHR"), Airport("DUB"), 1)))
-
-        duration should be(21)
 
       case Failure(failure) => fail(failure)
     }
