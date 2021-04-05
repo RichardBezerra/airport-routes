@@ -23,16 +23,16 @@ object RouteDurationReverseOrdering extends Ordering[(Airport, TrackingPath)] {
   }
 }
 
-case class TrackingPath(isInitiated: Boolean, routes: Seq[Routes.Route]) {
-  def totalDuration: Int = routes.map(_.durationHours).sum
+case class TrackingPath(routes: Seq[Routes.Route]) {
+  val totalDuration: Int = routes.map(_.durationHours).sum
 }
 
 object TrackingPath {
-  def apply(): TrackingPath = new TrackingPath(false, Seq())
+  def apply(): TrackingPath = new TrackingPath(Seq())
 
-  def apply(routes: Seq[Routes.Route]): TrackingPath = new TrackingPath(true, routes)
+  def apply(routes: Seq[Routes.Route]): TrackingPath = new TrackingPath(routes)
 
-  val notInitiated: TrackingPath = new TrackingPath(false, Seq())
+  val notInitiated: TrackingPath = new TrackingPath(Seq())
 }
 
 class DurationDistanceTracking extends mutable.HashMap[Airport, TrackingPath] {
@@ -44,9 +44,9 @@ class DurationDistanceTracking extends mutable.HashMap[Airport, TrackingPath] {
     val newDuration = this (route.arrival) match {
       case TrackingPath.notInitiated => TrackingPath(currentTracking.routes :+ route)
 
-      case arrivalTracking @ TrackingPath(true, _) =>
+      case arrivalTracking @ TrackingPath(_) =>
         currentTracking match {
-          case tracking @ TrackingPath(_, routes) =>
+          case tracking @ TrackingPath(routes) =>
             if (tracking.totalDuration + route.durationHours < arrivalTracking.totalDuration) {
               TrackingPath(routes :+ route)
             } else {
