@@ -35,7 +35,7 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
 
     val durationDistanceTrackingMap = HoursTrack(airports)
 
-    durationDistanceTrackingMap.setDurationOfDepartureToZero(Airport("DUB"))
+    durationDistanceTrackingMap.setDurationToZero(Airport("DUB"))
 
     durationDistanceTrackingMap(Airport("DUB")) should be(HoursTrackPathValue(Seq()))
   }
@@ -47,7 +47,7 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
 
     // act
     durationDistanceTrackingMap
-      .reduceDurationToArrivalIfRouteIsFaster(HoursTrackPathValue(),
+      .overridePathToArrivalIfRouteIsFaster(HoursTrackPathValue(),
         Routes.Route(Airport("DUB"), Airport("LHR"), 2))
 
     // assert
@@ -61,12 +61,12 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
     val durationDistanceTrackingMap = HoursTrack(airports)
 
     durationDistanceTrackingMap
-      .reduceDurationToArrivalIfRouteIsFaster(HoursTrackPathValue(),
+      .overridePathToArrivalIfRouteIsFaster(HoursTrackPathValue(),
         Routes.Route(Airport("DUB"), Airport("LHR"), 2))
 
     // act
     durationDistanceTrackingMap
-      .reduceDurationToArrivalIfRouteIsFaster(HoursTrackPathValue(),
+      .overridePathToArrivalIfRouteIsFaster(HoursTrackPathValue(),
         Routes.Route(Airport("SNN"), Airport("LHR"), 1))
 
     // assert
@@ -81,16 +81,16 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
     val durationDistanceTrackingMap = HoursTrack(airports)
 
     durationDistanceTrackingMap
-      .reduceDurationToArrivalIfRouteIsFaster(HoursTrackPathValue(),
+      .overridePathToArrivalIfRouteIsFaster(HoursTrackPathValue(),
         Routes.Route(Airport("DUB"), Airport("SYD"), 21))
 
     // act
     durationDistanceTrackingMap
-      .reduceDurationToArrivalIfRouteIsFaster(HoursTrackPathValue(),
+      .overridePathToArrivalIfRouteIsFaster(HoursTrackPathValue(),
         Routes.Route(Airport("DUB"), Airport("LHR"), 1))
 
     durationDistanceTrackingMap
-      .reduceDurationToArrivalIfRouteIsFaster(durationDistanceTrackingMap(Airport("LHR")),
+      .overridePathToArrivalIfRouteIsFaster(durationDistanceTrackingMap(Airport("LHR")),
         Routes.Route(Airport("LHR"), Airport("SYD"), 10))
 
     // assert
@@ -104,15 +104,15 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
 
     val durationDistanceTrackingMap = HoursTrack(airports)
 
-    durationDistanceTrackingMap.setDurationOfDepartureToZero(Airport("DUB"))
+    durationDistanceTrackingMap.setDurationToZero(Airport("DUB"))
 
     durationDistanceTrackingMap
-      .reduceDurationToArrivalIfRouteIsFaster(durationDistanceTrackingMap(Airport("DUB")),
+      .overridePathToArrivalIfRouteIsFaster(durationDistanceTrackingMap(Airport("DUB")),
         Routes.Route(Airport("DUB"), Airport("LHR"), 2))
 
     // act
     durationDistanceTrackingMap
-      .reduceDurationToArrivalIfRouteIsFaster(durationDistanceTrackingMap(Airport("DUB")),
+      .overridePathToArrivalIfRouteIsFaster(durationDistanceTrackingMap(Airport("DUB")),
         Routes.Route(Airport("DUB"), Airport("LHR"), 3))
 
     // assert

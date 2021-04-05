@@ -18,13 +18,13 @@ trait ShortestPathFinder {
 
       val hoursDistanceTracking = HoursTrack(allAirports)
 
-      hoursDistanceTracking.setDurationOfDepartureToZero(departure)
+      hoursDistanceTracking.setDurationToZero(departure)
 
       val routesPriorityQueue = mutable.PriorityQueue()(RouteDurationReverseOrdering)
 
       routesPriorityQueue.enqueue((departure, HoursTrackPathValue.notInitiated))
 
-      finder.find(graph, allAirports, departure, arrival, routesPriorityQueue, hoursDistanceTracking)
+      finder.fillHoursTrack(graph, allAirports, departure, arrival, routesPriorityQueue, hoursDistanceTracking)
 
       hoursDistanceTracking
         .get(arrival)
@@ -37,12 +37,12 @@ trait ShortestPathFinder {
 
 trait DirectedCycleGraphFinder {
 
-  def find(graph: Map[Airport, Seq[Routes.Route]],
-           allAirports: Set[Airport],
-           currentIterationAirport: Airport,
-           arrival: Airport,
-           priorityQueue: mutable.PriorityQueue[(Airport, HoursTrackPathValue)],
-           durationDistanceTracking: HoursTrack)
+  def fillHoursTrack(graph: Map[Airport, Seq[Routes.Route]],
+                     allAirports: Set[Airport],
+                     currentIterationAirport: Airport,
+                     arrival: Airport,
+                     priorityQueue: mutable.PriorityQueue[(Airport, HoursTrackPathValue)],
+                     hoursTrack: HoursTrack)
 }
 
 object RouteDurationReverseOrdering extends Ordering[(Airport, HoursTrackPathValue)] {
@@ -64,12 +64,12 @@ object HoursTrackPathValue {
 }
 
 class HoursTrack extends mutable.HashMap[Airport, HoursTrackPathValue] {
-  def setDurationOfDepartureToZero(departure: Airport): Unit = {
-    this.put(departure, HoursTrackPathValue())
+  def setDurationToZero(airport: Airport): Unit = {
+    this.put(airport, HoursTrackPathValue())
   }
 
-  def reduceDurationToArrivalIfRouteIsFaster(currentTracking: HoursTrackPathValue,
-                                             route: Routes.Route): Option[(Airport, HoursTrackPathValue)] = {
+  def overridePathToArrivalIfRouteIsFaster(currentTracking: HoursTrackPathValue,
+                                           route: Routes.Route): Option[(Airport, HoursTrackPathValue)] = {
     this (route.arrival) match {
       case HoursTrackPathValue.notInitiated =>
         val firstTrackingPath = HoursTrackPathValue(currentTracking.routes :+ route)
@@ -99,12 +99,12 @@ object HoursTrack {
 
 object LazyDijkstra extends DirectedCycleGraphFinder with ShortestPathFinder {
 
-  override def find(graph: Map[Airport, Seq[Routes.Route]],
-                    allAirports: Set[Airport],
-                    currentIterationAirport: Airport,
-                    arrival: Airport,
-                    routesPriorityQueue: mutable.PriorityQueue[(Airport, HoursTrackPathValue)],
-                    durationDistanceTracking: HoursTrack): Unit = {
+  override def fillHoursTrack(graph: Map[Airport, Seq[Routes.Route]],
+                              allAirports: Set[Airport],
+                              currentIterationAirport: Airport,
+                              arrival: Airport,
+                              routesPriorityQueue: mutable.PriorityQueue[(Airport, HoursTrackPathValue)],
+                              hoursTrack: HoursTrack): Unit = {
 
     val visitedAirports: mutable.HashMap[Airport, Boolean] = mutable.HashMap.from(allAirports.map((_, false)))
 
@@ -115,16 +115,16 @@ object LazyDijkstra extends DirectedCycleGraphFinder with ShortestPathFinder {
       visitedAirports.put(currentRoute._1, true)
 
       val isDurationToArrivalFaster =
-        durationDistanceTracking(currentRoute._1).totalDuration < currentRoute._2.totalDuration
+        hoursTrack(currentRoute._1).totalDuration < currentRoute._2.totalDuration
 
       if (!isDurationToArrivalFaster) {
 
         graph(currentRoute._1).foreach(route => {
           if (!visitedAirports(route.arrival)) {
-            val currentDurationAtDeparture = durationDistanceTracking(currentRoute._1)
+            val currentDurationAtDeparture = hoursTrack(currentRoute._1)
 
-            durationDistanceTracking
-              .reduceDurationToArrivalIfRouteIsFaster(currentDurationAtDeparture, route)
+            hoursTrack
+              .overridePathToArrivalIfRouteIsFaster(currentDurationAtDeparture, route)
               .foreach(routesPriorityQueue.enqueue(_))
           }
         })
