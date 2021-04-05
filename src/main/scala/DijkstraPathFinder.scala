@@ -40,26 +40,24 @@ class DurationDistanceTracking extends mutable.HashMap[Airport, TrackingPath] {
     this.put(departure, TrackingPath())
   }
 
-  def reduceDurationToArrivalIfRouteIsFaster(currentTracking: TrackingPath, route: Routes.Route): Option[(Airport, TrackingPath)] = {
-    val newDuration = this (route.arrival) match {
-      case TrackingPath.notInitiated => TrackingPath(currentTracking.routes :+ route)
+  def reduceDurationToArrivalIfRouteIsFaster(currentTracking: TrackingPath,
+                                             route: Routes.Route): Option[(Airport, TrackingPath)] = {
+    this (route.arrival) match {
+      case TrackingPath.notInitiated =>
+        val firstTrackingPath = TrackingPath(currentTracking.routes :+ route)
+        this.put(route.arrival, firstTrackingPath)
+        Some((route.arrival, firstTrackingPath))
 
-      case arrivalTracking @ TrackingPath(_) =>
+      case arrivalTracking : TrackingPath =>
         currentTracking match {
-          case tracking @ TrackingPath(routes) =>
-            if (tracking.totalDuration + route.durationHours < arrivalTracking.totalDuration) {
-              TrackingPath(routes :+ route)
-            } else {
-              TrackingPath()
-            }
-        }
-    }
+          case tracking @ TrackingPath(routes)
+            if tracking.totalDuration + route.durationHours < arrivalTracking.totalDuration =>
+            val fasterTrackingPath = TrackingPath(routes :+ route)
+            this.put(route.arrival, fasterTrackingPath)
+            Some((route.arrival, fasterTrackingPath))
 
-    if (newDuration != TrackingPath.notInitiated) {
-      this.put(route.arrival, newDuration)
-      Some((route.arrival, newDuration))
-    } else {
-      None
+          case _ => None
+        }
     }
   }
 }
