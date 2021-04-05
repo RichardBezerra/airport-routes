@@ -121,19 +121,18 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
   }
 
   "Lazy Dijkstra Path Finder" should "return shortest duration to all airports" in {
-    val expandedRoutes = Routes.providedRoutes
-
-    val graph = buildGraph(expandedRoutes)
 
     // act
-    LazyDijkstra.dijkstra(graph, Airport("DUB"), Airport("LAS"), Routes.groupAirports(expandedRoutes)) match {
-      case Success(value) =>
+    val path = LazyDijkstra.findShortestPath(Routes.providedRoutes,
+      Airport("DUB"), Airport("LAS"))(LazyDijkstra)
 
-        // assert
-        value(Airport("LAS")) should be(TrackingPath(Seq(
-                  Route(Airport("DUB"), Airport("ORD"), 6),
-                  Route(Airport("ORD"), Airport("LAS"), 2)
-                )))
+    // assert
+    path match {
+      case Success(routes) =>
+        routes should be(Seq(
+          Route(Airport("DUB"), Airport("ORD"), 6),
+          Route(Airport("ORD"), Airport("LAS"), 2)
+        ))
 
       case Failure(exception) => fail(exception)
     }
