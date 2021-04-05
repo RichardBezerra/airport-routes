@@ -1,3 +1,4 @@
+import Errors.{DepartureEqualToArrival, InvalidAirport, NoRoutesFound}
 import Routes.Airport
 
 import scala.collection.mutable
@@ -6,9 +7,6 @@ import scala.util.{Failure, Success, Try}
 object SingleSourceShortestPath {
 
   case object InvalidDagCyclesFound extends Throwable
-  case object DepartureEqualToArrival extends Throwable
-  case object NoRoutesFound extends Throwable
-  case object InvalidAirport extends Throwable
 
   /**
    * Creates a topological order representation of the graph that is generated from the provided routes.
