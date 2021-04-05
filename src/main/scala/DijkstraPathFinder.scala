@@ -83,7 +83,7 @@ object LazyDijkstra extends DijkstraPathFinder {
 
     val routesPriorityQueue = mutable.PriorityQueue()(RouteDurationReverseOrdering)
 
-    routesPriorityQueue.enqueue((departure, TrackingPath()))
+    routesPriorityQueue.enqueue((departure, TrackingPath.notInitiated))
 
     var arrivalFound = false
 
