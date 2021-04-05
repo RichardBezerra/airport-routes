@@ -214,7 +214,16 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
   }
 
   it should "return a failure when arrival airport is the same as departure" in {
-    val path = LazyDijkstra.findShortestPath(null, Airport("LAS"), Airport("LAS"), Set(), null)
+    val finder = new ShortestPathFinder { }
+
+    val path = finder.findShortestPath(Routes.providedRoutes,
+      Airport("LAS"),
+      Airport("LAS"))((_: Map[Airport, Seq[Route]],
+                       _: Set[Airport],
+                       _: Airport,
+                       _: Airport,
+                       _: mutable.PriorityQueue[(Airport, HoursTrackPathValue)],
+                       _: HoursTrack) => ???)
 
     path match {
       case Failure(failure) => failure should be (DepartureEqualToArrival)

@@ -99,27 +99,6 @@ object HoursTrack {
 
 object LazyDijkstra extends DirectedCycleGraphFinder with ShortestPathFinder {
 
-  def findShortestPath(graph: Map[Airport, Seq[Routes.Route]],
-                                departure: Airport,
-                                arrival: Airport,
-                                allAirports: Set[Airport],
-                                dijkstra: HoursTrack): Try[(Seq[Routes.Route], Int)] = {
-
-    if (departure == arrival) {
-      Failure(DepartureEqualToArrival)
-    } else if (!graph.keySet.contains(departure) || !graph.keySet.contains(arrival)) {
-      Failure(InvalidAirport)
-    } else {
-      val dijkstraResult = dijkstra(arrival)
-
-      if (dijkstraResult.routes.isEmpty) {
-        Failure(NoRoutesFound)
-      } else {
-        Success((dijkstraResult.routes, dijkstraResult.totalDuration))
-      }
-    }
-  }
-
   override def find(graph: Map[Airport, Seq[Routes.Route]],
                     allAirports: Set[Airport],
                     currentIterationAirport: Airport,
