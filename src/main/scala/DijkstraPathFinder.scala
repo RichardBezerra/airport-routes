@@ -9,23 +9,38 @@ trait ShortestPathFinder {
                        departure: Airport,
                        arrival: Airport): DirectedCycleGraphFinder => Try[Seq[Routes.Route]] = { finder =>
 
-    val airports = availableRoutes.flatMap(r => Set(r.departure, r.arrival))
+    val allAirports = availableRoutes.flatMap(r => Set(r.departure, r.arrival)).toSet
 
-    if (!airports.contains(departure) || !airports.contains(arrival)) {
-      Failure(InvalidAirport)
-    } else if (departure == arrival) {
-      Failure(DepartureEqualToArrival)
-    } else {
-      Failure(new RuntimeException)
+    if (!allAirports.contains(departure) || !allAirports.contains(arrival)) Failure(InvalidAirport)
+    else if (departure == arrival) Failure(DepartureEqualToArrival)
+    else {
+      val graph = Routes.buildGraph(availableRoutes)
+
+      val hoursDistanceTracking = DurationDistanceTracking(allAirports)
+
+      hoursDistanceTracking.setDurationOfDepartureToZero(departure)
+
+      val routesPriorityQueue = mutable.PriorityQueue()(RouteDurationReverseOrdering)
+
+      routesPriorityQueue.enqueue((departure, TrackingPath.notInitiated))
+
+      finder.find(graph, departure, routesPriorityQueue, hoursDistanceTracking)
+
+      hoursDistanceTracking
+        .get(arrival)
+        .filter(_.routes.nonEmpty)
+        .map(t => Success(t.routes))
+        .getOrElse(Failure(NoRoutesFound))
     }
   }
 }
 
 trait DirectedCycleGraphFinder {
+
   def find(graph: Map[Airport, Seq[Routes.Route]],
            currentIterationAirport: Airport,
            priorityQueue: mutable.PriorityQueue[(Airport, TrackingPath)],
-           durationDistanceTracking: DurationDistanceTracking): Try[DurationDistanceTracking]
+           durationDistanceTracking: DurationDistanceTracking)
 }
 
 trait DijkstraPathFinder {
