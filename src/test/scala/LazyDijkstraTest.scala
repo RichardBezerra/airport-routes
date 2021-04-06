@@ -1,5 +1,5 @@
 import com.airplanerouteschallenge.ExampleRoutes.providedRoutes
-import com.airplanerouteschallenge.{Airport, DepartureEqualToArrival, InvalidAirport, NoRoutesFound, Route, ShortestPathFinder}
+import com.airplanerouteschallenge._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
