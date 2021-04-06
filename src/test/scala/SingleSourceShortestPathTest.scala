@@ -77,7 +77,7 @@ class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
   }
 
   it should "find the shortest path from DUB to LAS" in {
-    val path = SingleSourceShortestPath.findShortestPath(Airport("DUB"), Airport("LAS"), Routes.providedRoutes)
+    val path = SingleSourceShortestPath.findShortestPath(Routes.providedRoutes, Airport("DUB"), Airport("LAS"))
 
     path match {
       case Success(routes) =>
@@ -89,7 +89,7 @@ class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
   }
 
   it should "find the shortest path from DUB to SYD" in {
-    val path = SingleSourceShortestPath.findShortestPath(Airport("DUB"), Airport("SYD"), Routes.providedRoutes)
+    val path = SingleSourceShortestPath.findShortestPath(Routes.providedRoutes, Airport("DUB"), Airport("SYD"))
 
     path match {
       case Success(routes) =>
@@ -102,7 +102,7 @@ class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
   }
 
   it should "find the shortest path from CDG to SYD" in {
-    val path = SingleSourceShortestPath.findShortestPath(Airport("CDG"), Airport("SYD"), Routes.providedRoutes)
+    val path = SingleSourceShortestPath.findShortestPath(Routes.providedRoutes, Airport("CDG"), Airport("SYD"))
 
     path match {
       case Success(routes) =>
@@ -114,7 +114,7 @@ class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
   }
 
   it should "return a failure when arrival airport is unreachable from the departure" in {
-    val path = SingleSourceShortestPath.findShortestPath(Airport("LAS"), Airport("DUB"), Routes.providedRoutes)
+    val path = SingleSourceShortestPath.findShortestPath(Routes.providedRoutes, Airport("LAS"), Airport("DUB"))
 
     path match {
       case Failure(failure) => failure should be (NoRoutesFound)
@@ -123,7 +123,7 @@ class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
   }
 
   it should "return a failure when arrival airport is the same as departure" in {
-    val path = SingleSourceShortestPath.findShortestPath(Airport("ORD"), Airport("ORD"), Routes.providedRoutes)
+    val path = SingleSourceShortestPath.findShortestPath(Routes.providedRoutes, Airport("ORD"), Airport("ORD"))
 
     path match {
       case Failure(failure) => failure should be (DepartureEqualToArrival)
@@ -132,7 +132,7 @@ class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
   }
 
   it should "return a failure when departure airport is not in the provided list" in {
-    val path = SingleSourceShortestPath.findShortestPath(Airport("SNN"), Airport("ORD"), Routes.providedRoutes)
+    val path = SingleSourceShortestPath.findShortestPath(Routes.providedRoutes, Airport("SNN"), Airport("ORD"))
 
     path match {
       case Failure(failure) => failure should be (InvalidAirport)
@@ -141,7 +141,7 @@ class SingleSourceShortestPathTest extends AnyFlatSpec with Matchers {
   }
 
   it should "return a failure when arrival airport is not in the provided list" in {
-    val path = SingleSourceShortestPath.findShortestPath(Airport("DUB"), Airport("SNN"), Routes.providedRoutes)
+    val path = SingleSourceShortestPath.findShortestPath(Routes.providedRoutes, Airport("DUB"), Airport("SNN"))
 
     path match {
       case Failure(failure) => failure should be (InvalidAirport)

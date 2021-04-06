@@ -116,9 +116,9 @@ object SingleSourceShortestPath {
    * @return sequence of airports used for travelling through shortest path if that path is found.
    *         Otherwise, a failure describing the problem.
    */
-  def findShortestPath(departure: Airport,
-                       arrival: Airport,
-                       routes: Seq[Routes.Route]): Try[Seq[Routes.Route]] = {
+  def findShortestPath(routes: Seq[Routes.Route],
+                       departure: Airport,
+                       arrival: Airport): Try[Seq[Routes.Route]] = {
 
     if (!Routes.groupAirports(routes).contains(departure)) {
       return Failure(InvalidAirport)
