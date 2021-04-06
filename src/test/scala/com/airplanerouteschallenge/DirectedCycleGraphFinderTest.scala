@@ -1,6 +1,6 @@
 package com.airplanerouteschallenge
 
-import com.airplanerouteschallenge.ExampleRoutes.providedRoutes
+import com.airplanerouteschallenge.ExampleRoutes.{extendedRoutes, providedRoutes}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
@@ -31,11 +31,10 @@ class DirectedCycleGraphFinderTest extends AnyFlatSpec with Matchers {
   }
 
   it should "find shortest duration from a departure to an arrival " +
-    "when routes are expanded to include returning routes" in {
-    val expandedRoutes = addReturningRoutes(providedRoutes)
+    "when routes are extended to include returning routes" in {
 
     // act
-    val shortestPath = DirectedCycleGraphFinder.findShortestPath(expandedRoutes, Airport("SYD"), Airport("DUB"))
+    val shortestPath = DirectedCycleGraphFinder.findShortestPath(extendedRoutes, Airport("SYD"), Airport("DUB"))
 
     // assert
     shortestPath match {
