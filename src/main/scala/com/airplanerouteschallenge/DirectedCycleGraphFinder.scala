@@ -1,4 +1,4 @@
-import com.airplanerouteschallenge.{Airport, DepartureEqualToArrival, InvalidAirport, NoRoutesFound, Route, ShortestPathFinder}
+package com.airplanerouteschallenge
 
 import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
@@ -143,3 +143,4 @@ object HoursTrackPathValue {
 
   val notInitiated: HoursTrackPathValue = new HoursTrackPathValue(Seq())
 }
+
