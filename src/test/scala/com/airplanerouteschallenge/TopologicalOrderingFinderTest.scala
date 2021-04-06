@@ -1,5 +1,6 @@
+package com.airplanerouteschallenge
+
 import com.airplanerouteschallenge.TopologicalOrderingFinder.InvalidDagCyclesFound
-import com.airplanerouteschallenge._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper

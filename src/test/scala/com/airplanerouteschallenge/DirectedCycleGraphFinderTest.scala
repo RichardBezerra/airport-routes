@@ -1,12 +1,13 @@
+package com.airplanerouteschallenge
+
 import com.airplanerouteschallenge.ExampleRoutes.providedRoutes
-import com.airplanerouteschallenge._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import scala.util.{Failure, Success}
 
-class LazyDijkstraTest extends AnyFlatSpec with Matchers {
+class DirectedCycleGraphFinderTest extends AnyFlatSpec with Matchers {
 
   val shortestPathFinderMock: ShortestPathFinder = (_: Seq[Route],
                                                 _: Airport,
