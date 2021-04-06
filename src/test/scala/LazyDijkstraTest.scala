@@ -1,16 +1,19 @@
-import Errors.{DepartureEqualToArrival, InvalidAirport, NoRoutesFound}
-import Routes.{Airport, Route, buildGraph, providedRoutes}
+import com.airplanerouteschallenge.ExampleRoutes.providedRoutes
+import com.airplanerouteschallenge.{Airport, DepartureEqualToArrival, InvalidAirport, NoRoutesFound, Route, ShortestPathFinder}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
-import scala.collection.mutable
 import scala.util.{Failure, Success}
 
 class LazyDijkstraTest extends AnyFlatSpec with Matchers {
 
+  val shortestPathFinderMock: ShortestPathFinder = (_: Seq[Route],
+                                                _: Airport,
+                                                _: Airport) => ???
+
   "DurationDistanceTrackingMap" should "be created using a list of airports" in {
-    val airports = Routes.groupAirports(providedRoutes)
+    val airports = shortestPathFinderMock.airports(providedRoutes)
 
     val durationDistanceTrackingMap = HoursTrack(airports)
 
@@ -18,7 +21,7 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
   }
 
   it should "initiate departure airport duration tracking as 0" in {
-    val airports = Routes.groupAirports(providedRoutes)
+    val airports = shortestPathFinderMock.airports(providedRoutes)
 
     val durationDistanceTrackingMap = HoursTrack(airports)
 
@@ -28,14 +31,13 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
   }
 
   it should "update duration tracking to given arrival if duration to get that does not exist" in {
-    val airports = Routes.groupAirports(providedRoutes)
+    val airports = shortestPathFinderMock.airports(providedRoutes)
 
     val durationDistanceTrackingMap = HoursTrack(airports)
 
     // act
     durationDistanceTrackingMap
-      .overridePathToArrivalIfRouteIsFaster(HoursTrackPathValue(),
-        Routes.Route(Airport("DUB"), Airport("LHR"), 2))
+      .overridePathToArrivalIfRouteIsFaster(HoursTrackPathValue(), Route(Airport("DUB"), Airport("LHR"), 2))
 
     // assert
     durationDistanceTrackingMap(Airport("LHR")) should
@@ -43,18 +45,18 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
   }
 
   it should "update duration tracking to given arrival if duration to get that is smaller then its current value" in {
-    val airports = Routes.groupAirports(providedRoutes)
+    val airports = shortestPathFinderMock.airports(providedRoutes)
 
     val durationDistanceTrackingMap = HoursTrack(airports)
 
     durationDistanceTrackingMap
       .overridePathToArrivalIfRouteIsFaster(HoursTrackPathValue(),
-        Routes.Route(Airport("DUB"), Airport("LHR"), 2))
+        Route(Airport("DUB"), Airport("LHR"), 2))
 
     // act
     durationDistanceTrackingMap
       .overridePathToArrivalIfRouteIsFaster(HoursTrackPathValue(),
-        Routes.Route(Airport("SNN"), Airport("LHR"), 1))
+        Route(Airport("SNN"), Airport("LHR"), 1))
 
     // assert
     durationDistanceTrackingMap(Airport("LHR")) should
@@ -63,31 +65,31 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
 
   it should "update duration tracking to given arrival " +
     "if duration to get that from other path is smaller then its current value" in {
-    val airports = Routes.groupAirports(providedRoutes)
+    val airports = shortestPathFinderMock.airports(providedRoutes)
 
     val durationDistanceTrackingMap = HoursTrack(airports)
 
     durationDistanceTrackingMap
       .overridePathToArrivalIfRouteIsFaster(HoursTrackPathValue(),
-        Routes.Route(Airport("DUB"), Airport("SYD"), 21))
+        Route(Airport("DUB"), Airport("SYD"), 21))
 
     // act
     durationDistanceTrackingMap
       .overridePathToArrivalIfRouteIsFaster(HoursTrackPathValue(),
-        Routes.Route(Airport("DUB"), Airport("LHR"), 1))
+        Route(Airport("DUB"), Airport("LHR"), 1))
 
     durationDistanceTrackingMap
       .overridePathToArrivalIfRouteIsFaster(durationDistanceTrackingMap(Airport("LHR")),
-        Routes.Route(Airport("LHR"), Airport("SYD"), 10))
+        Route(Airport("LHR"), Airport("SYD"), 10))
 
     // assert
     durationDistanceTrackingMap(Airport("SYD")) should
-      be(HoursTrackPathValue(Seq(Routes.Route(Airport("DUB"), Airport("LHR"), 1),
-              Routes.Route(Airport("LHR"), Airport("SYD"), 10))))
+      be(HoursTrackPathValue(Seq(Route(Airport("DUB"), Airport("LHR"), 1),
+              Route(Airport("LHR"), Airport("SYD"), 10))))
   }
 
   it should "not update duration tracking to given arrival if duration to get that is bigger than its current value" in {
-    val airports = Routes.groupAirports(providedRoutes)
+    val airports = shortestPathFinderMock.airports(providedRoutes)
 
     val durationDistanceTrackingMap = HoursTrack(airports)
 
@@ -95,12 +97,12 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
 
     durationDistanceTrackingMap
       .overridePathToArrivalIfRouteIsFaster(durationDistanceTrackingMap(Airport("DUB")),
-        Routes.Route(Airport("DUB"), Airport("LHR"), 2))
+        Route(Airport("DUB"), Airport("LHR"), 2))
 
     // act
     durationDistanceTrackingMap
       .overridePathToArrivalIfRouteIsFaster(durationDistanceTrackingMap(Airport("DUB")),
-        Routes.Route(Airport("DUB"), Airport("LHR"), 3))
+        Route(Airport("DUB"), Airport("LHR"), 3))
 
     // assert
     durationDistanceTrackingMap(Airport("LHR")) should
@@ -110,8 +112,7 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
   "Lazy Dijkstra Path Finder" should "return shortest duration to all airports" in {
 
     // act
-    val path = LazyDijkstra
-      .findShortestPath(Routes.providedRoutes, Airport("DUB"), Airport("LAS"))(LazyDijkstra)
+    val path = DirectedCycleGraphFinder.findShortestPath(providedRoutes, Airport("DUB"), Airport("LAS"))
 
     // assert
     path match {
@@ -128,8 +129,7 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
   it should "find shortest duration from a departure to an arrival" in {
 
     // act
-    val shortestPath = LazyDijkstra
-      .findShortestPath(Routes.providedRoutes, Airport("DUB"), Airport("SYD"))(LazyDijkstra)
+    val shortestPath = DirectedCycleGraphFinder.findShortestPath(providedRoutes, Airport("DUB"), Airport("SYD"))
 
     // assert
     shortestPath match {
@@ -145,11 +145,10 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
 
   it should "find shortest duration from a departure to an arrival when routes are expanded " +
     "to include returning routes" in {
-    val expandedRoutes = addReturningRoutes(Routes.providedRoutes)
+    val expandedRoutes = addReturningRoutes(providedRoutes)
 
     // act
-    val shortestPath = LazyDijkstra
-      .findShortestPath(expandedRoutes, Airport("SYD"), Airport("DUB"))(LazyDijkstra)
+    val shortestPath = DirectedCycleGraphFinder.findShortestPath(expandedRoutes, Airport("SYD"), Airport("DUB"))
 
     // assert
     shortestPath match {
@@ -165,10 +164,10 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
 
   "ShortestPathFinder" should "find shortest duration from a departure to an arrival when routes are expanded " +
     "to include returning routes" in {
-    val expandedRoutes = addReturningRoutes(Routes.providedRoutes)
+    val expandedRoutes = addReturningRoutes(providedRoutes)
 
     // act
-    val shortestPath = LazyDijkstra.findShortestPath(expandedRoutes, Airport("SYD"), Airport("DUB"))(LazyDijkstra)
+    val shortestPath = DirectedCycleGraphFinder.findShortestPath(expandedRoutes, Airport("SYD"), Airport("DUB"))
 
     // assert
     shortestPath match {
@@ -183,15 +182,9 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
   }
 
   it should "return a failure when arrival airport is unreachable from the departure" in {
-    val finder = new ShortestPathFinder { }
 
-    val path = finder.findShortestPath(Routes.providedRoutes,
-      Airport("DUB"),
-      Airport("LAS"))((_: Map[Airport, Seq[Route]],
-                       _: Set[Airport],
-                       _: Airport,
-                       _: Airport,
-                       _: HoursTrack) => { })
+    val path = DirectedCycleGraphFinder
+      .findShortestPath(providedRoutes, Airport("LAS"), Airport("DUB"))
 
     path match {
       case Failure(failure) => failure should be (NoRoutesFound)
@@ -200,15 +193,9 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
   }
 
   it should "return a failure when arrival airport is the same as departure" in {
-    val finder = new ShortestPathFinder { }
 
-    val path = finder.findShortestPath(Routes.providedRoutes,
-      Airport("LAS"),
-      Airport("LAS"))((_: Map[Airport, Seq[Route]],
-                       _: Set[Airport],
-                       _: Airport,
-                       _: Airport,
-                       _: HoursTrack) => ???)
+    val path = DirectedCycleGraphFinder
+      .findShortestPath(providedRoutes, Airport("LAS"), Airport("LAS"))
 
     path match {
       case Failure(failure) => failure should be (DepartureEqualToArrival)
@@ -217,15 +204,9 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
   }
 
   it should "return a failure when departure airport is not in the provided list" in {
-    val finder = new ShortestPathFinder { }
 
-    val path = finder.findShortestPath(Routes.providedRoutes,
-      Airport("SNN"),
-      Airport("LAS"))((_: Map[Airport, Seq[Route]],
-                       _: Set[Airport],
-                       _: Airport,
-                       _: Airport,
-                       _: HoursTrack) => ???)
+    val path = DirectedCycleGraphFinder
+      .findShortestPath(providedRoutes, Airport("SNN"), Airport("LAS"))
 
     path match {
       case Failure(failure) => failure should be (InvalidAirport)
@@ -234,15 +215,9 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
   }
   
   it should "return a failure when arrival airport is not in the provided list" in {
-    val finder = new ShortestPathFinder { }
 
-    val path = finder.findShortestPath(Routes.providedRoutes,
-      Airport("LAS"),
-      Airport("SNN"))((_: Map[Airport, Seq[Route]],
-                       _: Set[Airport],
-                       _: Airport,
-                       _: Airport,
-                       _: HoursTrack) => ???)
+    val path = DirectedCycleGraphFinder
+      .findShortestPath(providedRoutes, Airport("LAS"), Airport("SNN"))
 
     path match {
       case Failure(failure) => failure should be (InvalidAirport)
@@ -250,8 +225,8 @@ class LazyDijkstraTest extends AnyFlatSpec with Matchers {
     }
   }
 
-  def addReturningRoutes(providedRoutes: Seq[Routes.Route]): Seq[Routes.Route] = {
+  def addReturningRoutes(providedRoutes: Seq[Route]): Seq[Route] = {
     providedRoutes :++ providedRoutes
-      .map(currentRoute => Routes.Route(currentRoute.arrival, currentRoute.departure, currentRoute.durationHours))
+      .map(currentRoute => Route(currentRoute.arrival, currentRoute.departure, currentRoute.durationHours))
   }
 }

@@ -1,20 +1,27 @@
-import Errors.{DepartureEqualToArrival, InvalidAirport, NoRoutesFound}
-import Routes.Airport
+import com.airplanerouteschallenge.{Airport, DepartureEqualToArrival, InvalidAirport, NoRoutesFound, Route, ShortestPathFinder}
 
 import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
 
-trait ShortestPathFinder {
-  def findShortestPath(availableRoutes: Seq[Routes.Route],
-                       departure: Airport,
-                       arrival: Airport): DirectedCycleGraphFinder => Try[Seq[Routes.Route]] = { finder =>
+trait DirectedCycleGraphFinder extends ShortestPathFinder {
 
-    val allAirports = availableRoutes.flatMap(r => Set(r.departure, r.arrival)).toSet
+  override def findShortestPath(availableRoutes: Seq[Route],
+                                departure: Airport,
+                                arrival: Airport): Try[Seq[Route]] = {
+
+    findShortestPathWith(availableRoutes, departure, arrival)(LazyDijkstra)
+  }
+
+  def findShortestPathWith(availableRoutes: Seq[Route],
+                           departure: Airport,
+                           arrival: Airport): Dijkstra => Try[Seq[Route]] = { finder =>
+
+    val allAirports = airports(availableRoutes)
 
     if (!allAirports.contains(departure) || !allAirports.contains(arrival)) Failure(InvalidAirport)
     else if (departure == arrival) Failure(DepartureEqualToArrival)
     else {
-      val graph = Routes.buildGraph(availableRoutes)
+      val graph = buildGraph(availableRoutes)
 
       val hoursDistanceTracking = HoursTrack(allAirports)
 
@@ -29,26 +36,67 @@ trait ShortestPathFinder {
         .getOrElse(Failure(NoRoutesFound))
     }
   }
+
 }
 
-trait DirectedCycleGraphFinder {
-  def fillHoursTrack(graph: Map[Airport, Seq[Routes.Route]],
+object DirectedCycleGraphFinder extends DirectedCycleGraphFinder
+
+trait Dijkstra {
+
+  def priorityQueue: mutable.PriorityQueue[(Airport, HoursTrackPathValue)]
+
+  def fillHoursTrack(graph: Map[Airport, Seq[Route]],
                      allAirports: Set[Airport],
                      departure: Airport,
                      arrival: Airport,
                      hoursTrack: HoursTrack): Unit
 }
 
-case class HoursTrackPathValue(routes: Seq[Routes.Route]) {
-  val totalDuration: Int = routes.map(_.durationHours).sum
-}
+object LazyDijkstra extends Dijkstra {
 
-object HoursTrackPathValue {
-  def apply(): HoursTrackPathValue = new HoursTrackPathValue(Seq())
+  val priorityQueue: mutable.PriorityQueue[(Airport, HoursTrackPathValue)] =
+    mutable.PriorityQueue()(hoursTrackReverseOrdering)
 
-  def apply(routes: Seq[Routes.Route]): HoursTrackPathValue = new HoursTrackPathValue(routes)
+  lazy val hoursTrackReverseOrdering: Ordering[(Airport, HoursTrackPathValue)] = (x: (Airport, HoursTrackPathValue),
+                                                                                  y: (Airport, HoursTrackPathValue)) => {
+    -x._2.totalDuration.compare(y._2.totalDuration)
+  }
 
-  val notInitiated: HoursTrackPathValue = new HoursTrackPathValue(Seq())
+  override def fillHoursTrack(graph: Map[Airport, Seq[Route]],
+                              allAirports: Set[Airport],
+                              departure: Airport,
+                              arrival: Airport,
+                              hoursTrack: HoursTrack): Unit = {
+
+    priorityQueue.enqueue((departure, HoursTrackPathValue.notInitiated))
+
+    val visitedAirports: mutable.HashMap[Airport, Boolean] = mutable.HashMap.from(allAirports.map((_, false)))
+
+    var arrivalFound = false
+
+    while (priorityQueue.nonEmpty && !arrivalFound) {
+      val currentRoute = priorityQueue.dequeue()
+      visitedAirports.put(currentRoute._1, true)
+
+      val isDurationToArrivalFaster =
+        hoursTrack(currentRoute._1).totalDuration < currentRoute._2.totalDuration
+
+      if (!isDurationToArrivalFaster) {
+
+        graph(currentRoute._1).foreach(route => {
+          if (!visitedAirports(route.arrival)) {
+            val currentDurationAtDeparture = hoursTrack(currentRoute._1)
+
+            hoursTrack
+              .overridePathToArrivalIfRouteIsFaster(currentDurationAtDeparture, route)
+              .foreach(priorityQueue.enqueue(_))
+          }
+        })
+
+        arrivalFound = currentRoute._1 == arrival
+      }
+    }
+  }
 }
 
 class HoursTrack extends mutable.HashMap[Airport, HoursTrackPathValue] {
@@ -57,7 +105,7 @@ class HoursTrack extends mutable.HashMap[Airport, HoursTrackPathValue] {
   }
 
   def overridePathToArrivalIfRouteIsFaster(currentTracking: HoursTrackPathValue,
-                                           route: Routes.Route): Option[(Airport, HoursTrackPathValue)] = {
+                                           route: Route): Option[(Airport, HoursTrackPathValue)] = {
     this (route.arrival) match {
       case HoursTrackPathValue.notInitiated =>
         val firstTrackingPath = HoursTrackPathValue(currentTracking.routes :+ route)
@@ -84,48 +132,14 @@ object HoursTrack {
   }
 }
 
-object LazyDijkstra extends ShortestPathFinder with DirectedCycleGraphFinder {
+case class HoursTrackPathValue(routes: Seq[Route]) {
+  val totalDuration: Int = routes.map(_.durationHours).sum
+}
 
-  lazy val hoursTrackReverseOrdering: Ordering[(Airport, HoursTrackPathValue)] = (x: (Airport, HoursTrackPathValue),
-                                                                             y: (Airport, HoursTrackPathValue)) => {
-    -x._2.totalDuration.compare(y._2.totalDuration)
-  }
+object HoursTrackPathValue {
+  def apply(): HoursTrackPathValue = new HoursTrackPathValue(Seq())
 
-  override def fillHoursTrack(graph: Map[Airport, Seq[Routes.Route]],
-                              allAirports: Set[Airport],
-                              departure: Airport,
-                              arrival: Airport,
-                              hoursTrack: HoursTrack): Unit = {
+  def apply(routes: Seq[Route]): HoursTrackPathValue = new HoursTrackPathValue(routes)
 
-    val routesPriorityQueue = mutable.PriorityQueue()(hoursTrackReverseOrdering)
-
-    routesPriorityQueue.enqueue((departure, HoursTrackPathValue.notInitiated))
-
-    val visitedAirports: mutable.HashMap[Airport, Boolean] = mutable.HashMap.from(allAirports.map((_, false)))
-
-    var arrivalFound = false
-
-    while (routesPriorityQueue.nonEmpty && !arrivalFound) {
-      val currentRoute = routesPriorityQueue.dequeue()
-      visitedAirports.put(currentRoute._1, true)
-
-      val isDurationToArrivalFaster =
-        hoursTrack(currentRoute._1).totalDuration < currentRoute._2.totalDuration
-
-      if (!isDurationToArrivalFaster) {
-
-        graph(currentRoute._1).foreach(route => {
-          if (!visitedAirports(route.arrival)) {
-            val currentDurationAtDeparture = hoursTrack(currentRoute._1)
-
-            hoursTrack
-              .overridePathToArrivalIfRouteIsFaster(currentDurationAtDeparture, route)
-              .foreach(routesPriorityQueue.enqueue(_))
-          }
-        })
-
-        arrivalFound = currentRoute._1 == arrival
-      }
-    }
-  }
+  val notInitiated: HoursTrackPathValue = new HoursTrackPathValue(Seq())
 }
