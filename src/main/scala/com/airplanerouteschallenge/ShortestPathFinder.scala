@@ -53,5 +53,6 @@ object ExampleRoutes {
     Route(Airport("LAS"), Airport("SYD"), 14)
   )
 
-  val extendedRoutes: Seq[Route] = providedRoutes.map(r => Route(r.arrival, r.departure, r.durationHours))
+  val extendedRoutes: Seq[Route] =
+    providedRoutes :++ providedRoutes.map(r => Route(r.arrival, r.departure, r.durationHours))
 }
