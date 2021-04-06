@@ -60,7 +60,7 @@ class TopologicalOrderingFinderTest extends AnyFlatSpec with Matchers {
     }
   }
 
-  it should "find the shortest path from a source in " +
+  it should "find the shortest path from an airport in " +
     "the middle of topological order (CDG) to an airport in the very ending (SYD)" in {
     val graph = TopologicalOrderingFinder.buildGraph(ExampleRoutes.providedRoutes)
 
@@ -115,7 +115,7 @@ class TopologicalOrderingFinderTest extends AnyFlatSpec with Matchers {
     }
   }
 
-  it should "return a failure when there is no path from departure to arrival" in {
+  it should "return a failure when there is no path from departure to arrival (e.g LAS to DUB)" in {
     val path = TopologicalOrderingFinder.findShortestPath(ExampleRoutes.providedRoutes, Airport("LAS"), Airport("DUB"))
 
     path match {
