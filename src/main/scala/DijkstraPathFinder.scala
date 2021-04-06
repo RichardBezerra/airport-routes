@@ -32,7 +32,11 @@ trait ShortestPathFinder {
 }
 
 trait DirectedCycleGraphFinder {
-  def fillHoursTrack(graph: Map[Airport, Seq[Routes.Route]], allAirports: Set[Airport], currentIterationAirport: Airport, arrival: Airport, hoursTrack: HoursTrack): Unit
+  def fillHoursTrack(graph: Map[Airport, Seq[Routes.Route]],
+                     allAirports: Set[Airport],
+                     departure: Airport,
+                     arrival: Airport,
+                     hoursTrack: HoursTrack): Unit
 }
 
 case class HoursTrackPathValue(routes: Seq[Routes.Route]) {
