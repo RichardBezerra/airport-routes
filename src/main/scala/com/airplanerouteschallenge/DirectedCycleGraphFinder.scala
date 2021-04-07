@@ -36,7 +36,7 @@ trait DirectedCycleGraphFinder extends ShortestPathFinder {
     else {
       val graph = buildGraph(availableRoutes)
 
-      val hoursDistanceTracking = finder.fillHoursTrack(graph, allAirports, departure, arrival)
+      val hoursDistanceTracking = finder.generateHoursTrack(graph, allAirports, departure, arrival)
 
       hoursDistanceTracking
         .get(arrival)
@@ -73,10 +73,10 @@ trait Dijkstra {
    * @return map that holds the shortest path from departure to other airports that gets
    *         passed through until destination is found.
    */
-  def fillHoursTrack(graph: Map[Airport, Seq[Route]],
-                     allAirports: Set[Airport],
-                     departure: Airport,
-                     arrival: Airport): HoursTrack
+  def generateHoursTrack(graph: Map[Airport, Seq[Route]],
+                         allAirports: Set[Airport],
+                         departure: Airport,
+                         arrival: Airport): HoursTrack
 }
 
 /**
@@ -84,26 +84,25 @@ trait Dijkstra {
  */
 object LazyDijkstra extends Dijkstra {
 
-  val priorityQueue: mutable.PriorityQueue[(Airport, HoursTrackPathValue)] =
-    mutable.PriorityQueue()(reverseHoursOrdering)
+  lazy val priorityQueue: mutable.PriorityQueue[(Airport, HoursTrackPathValue)] = {
+    val reverseHoursOrdering: Ordering[(Airport, HoursTrackPathValue)] = (x: (Airport, HoursTrackPathValue),
+                                                                          y: (Airport, HoursTrackPathValue)) => {
+      -x._2.totalDuration.compare(y._2.totalDuration)
+    }
 
-  lazy val reverseHoursOrdering: Ordering[(Airport, HoursTrackPathValue)] = (x: (Airport, HoursTrackPathValue),
-                                                                             y: (Airport, HoursTrackPathValue)) => {
-    -x._2.totalDuration.compare(y._2.totalDuration)
+    mutable.PriorityQueue()(reverseHoursOrdering)
   }
 
-  override def fillHoursTrack(graph: Map[Airport, Seq[Route]],
-                              allAirports: Set[Airport],
-                              departure: Airport,
-                              arrival: Airport): HoursTrack = {
+  override def generateHoursTrack(graph: Map[Airport, Seq[Route]],
+                                  allAirports: Set[Airport],
+                                  departure: Airport,
+                                  arrival: Airport): HoursTrack = {
 
-    val hoursDistanceTracking = HoursTrack(allAirports)
-
-    hoursDistanceTracking.setDurationToZero(departure)
+    val hoursDistanceTrack: HoursTrack = createHoursTrack(allAirports, departure)
 
     priorityQueue.enqueue((departure, HoursTrackPathValue.notInitiated))
 
-    val visitedAirports: mutable.HashMap[Airport, Boolean] = mutable.HashMap.from(allAirports.map((_, false)))
+    val visitedAirports = mutable.HashMap.from(allAirports.map((_, false)))
 
     var arrivalFound = false
 
@@ -112,15 +111,15 @@ object LazyDijkstra extends Dijkstra {
       visitedAirports.put(currentRoute._1, true)
 
       val isDurationToArrivalFaster =
-        hoursDistanceTracking(currentRoute._1).totalDuration < currentRoute._2.totalDuration
+        hoursDistanceTrack(currentRoute._1).totalDuration < currentRoute._2.totalDuration
 
       if (!isDurationToArrivalFaster) {
 
         graph(currentRoute._1).foreach(route => {
           if (!visitedAirports(route.arrival)) {
-            val currentDurationAtDeparture = hoursDistanceTracking(currentRoute._1)
+            val currentDurationAtDeparture = hoursDistanceTrack(currentRoute._1)
 
-            hoursDistanceTracking
+            hoursDistanceTrack
               .overridePathToArrivalIfRouteIsFaster(currentDurationAtDeparture, route)
               .foreach(priorityQueue.enqueue(_))
           }
@@ -130,6 +129,12 @@ object LazyDijkstra extends Dijkstra {
       }
     }
 
+    hoursDistanceTrack
+  }
+
+  private def createHoursTrack(allAirports: Set[Airport], departure: Airport) = {
+    val hoursDistanceTracking = HoursTrack(allAirports)
+    hoursDistanceTracking.setDurationToZero(departure)
     hoursDistanceTracking
   }
 }
