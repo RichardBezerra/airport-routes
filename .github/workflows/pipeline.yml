@@ -20,7 +20,6 @@ jobs:
         distribution: 'adopt'
     - name: Run tests and assembly
       run: sbt assembly
-    - run: ls -R
     - name: Save Artifact
       uses: actions/upload-artifact@v2
       with:
