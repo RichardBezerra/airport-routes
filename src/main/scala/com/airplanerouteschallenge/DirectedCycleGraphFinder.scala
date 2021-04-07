@@ -3,6 +3,10 @@ package com.airplanerouteschallenge
 import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
 
+/**
+ * Finder that aims to search for shortest paths in graphs that are directed and cyclic.
+ * In order to that it takes a Dijkstra implementation.
+ */
 trait DirectedCycleGraphFinder extends ShortestPathFinder {
 
   override def findShortestPath(availableRoutes: Seq[Route],
@@ -12,6 +16,15 @@ trait DirectedCycleGraphFinder extends ShortestPathFinder {
     findShortestPathWith(availableRoutes, departure, arrival)(LazyDijkstra)
   }
 
+  /**
+   * Finds the shortest path from an origin airport to a destination airport among informed routes.
+   * @param availableRoutes all possibles routes.
+   * @param departure origin of the path.
+   * @param arrival destination of the path.
+   * @return sequence of routes that goes from origin (first item of the sequence)
+   *         to destination (last item of the sequence).
+   *         It takes a Dijsktra implementation for doing that.
+   */
   def findShortestPathWith(availableRoutes: Seq[Route],
                            departure: Airport,
                            arrival: Airport): Dijkstra => Try[Seq[Route]] = { finder =>
@@ -41,10 +54,29 @@ trait DirectedCycleGraphFinder extends ShortestPathFinder {
 
 object DirectedCycleGraphFinder extends DirectedCycleGraphFinder
 
+/**
+ * Contract for Dijkstra algorithm.
+ */
 trait Dijkstra {
 
+  /**
+   * Queue that is used for keeping tracking of what airports are the next to be visited
+   * while fillHoursTrack iterates over the graph.
+   * @return priority queue that order items in reverse order.
+   */
   def priorityQueue: mutable.PriorityQueue[(Airport, HoursTrackPathValue)]
 
+  /**
+   * Fill hoursTrack while searches for shortest path from departure to arrival.
+   * This is not a pure function. It keeps changing hoursTrack for each call.
+   *
+   * @param graph that is traversed while searching for the shortest path.
+   * @param allAirports list of all airports in the graph.
+   * @param departure origin of the path.
+   * @param arrival destination of the path.
+   * @param hoursTrack mutable map that holds the shortest path from departure to other airports that gets
+   *                   passed through until destination is found.
+   */
   def fillHoursTrack(graph: Map[Airport, Seq[Route]],
                      allAirports: Set[Airport],
                      departure: Airport,
@@ -52,13 +84,16 @@ trait Dijkstra {
                      hoursTrack: HoursTrack): Unit
 }
 
+/**
+ * Its a lazy implementation because it might add destination airport more than once in the priority queue.
+ */
 object LazyDijkstra extends Dijkstra {
 
   val priorityQueue: mutable.PriorityQueue[(Airport, HoursTrackPathValue)] =
-    mutable.PriorityQueue()(hoursTrackReverseOrdering)
+    mutable.PriorityQueue()(reverseHoursOrdering)
 
-  lazy val hoursTrackReverseOrdering: Ordering[(Airport, HoursTrackPathValue)] = (x: (Airport, HoursTrackPathValue),
-                                                                                  y: (Airport, HoursTrackPathValue)) => {
+  lazy val reverseHoursOrdering: Ordering[(Airport, HoursTrackPathValue)] = (x: (Airport, HoursTrackPathValue),
+                                                                             y: (Airport, HoursTrackPathValue)) => {
     -x._2.totalDuration.compare(y._2.totalDuration)
   }
 
@@ -99,6 +134,12 @@ object LazyDijkstra extends Dijkstra {
   }
 }
 
+/**
+ * Map that holds the path from a departure (the one that is initialized with HoursTrackPathValue as zero)
+ * to some other airports while the shortest path is searched for.
+ * Key is an Airport.
+ * Value is a HoursTrackPathValue that holds a sequence of routes along with the sum of hours across all its routes.
+ */
 class HoursTrack extends mutable.HashMap[Airport, HoursTrackPathValue] {
   def setDurationToZero(airport: Airport): Unit = {
     this.put(airport, HoursTrackPathValue())
