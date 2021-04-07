@@ -129,7 +129,7 @@ class TopologicalOrderingFinderTest extends AnyFlatSpec with Matchers {
     val path = TopologicalOrderingFinder.findShortestPath(ExampleRoutes.providedRoutes, Airport("ORD"), Airport("ORD"))
 
     path match {
-      case Failure(failure) => failure should be (DepartureEqualToArrival)
+      case Failure(failure) => failure shouldBe a [DepartureEqualToArrival]
       case Success(_) => fail()
     }
   }
@@ -138,7 +138,7 @@ class TopologicalOrderingFinderTest extends AnyFlatSpec with Matchers {
     val path = TopologicalOrderingFinder.findShortestPath(ExampleRoutes.providedRoutes, Airport("SNN"), Airport("ORD"))
 
     path match {
-      case Failure(failure) => failure should be (InvalidAirport)
+      case Failure(failure) => failure shouldBe a [InvalidAirport]
       case Success(_) => fail()
     }
   }
@@ -147,7 +147,7 @@ class TopologicalOrderingFinderTest extends AnyFlatSpec with Matchers {
     val path = TopologicalOrderingFinder.findShortestPath(ExampleRoutes.providedRoutes, Airport("DUB"), Airport("SNN"))
 
     path match {
-      case Failure(failure) => failure should be (InvalidAirport)
+      case Failure(failure) => failure shouldBe a [InvalidAirport]
       case Success(_) => fail()
     }
   }

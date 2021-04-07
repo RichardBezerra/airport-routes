@@ -19,15 +19,15 @@ object TopologicalOrderingFinder extends ShortestPathFinder {
                                 arrival: Airport): Try[Seq[Route]] = {
 
     if (!airports(routes).contains(departure)) {
-      return Failure(InvalidAirport)
+      return Failure(InvalidAirport(departure.iataCode))
     }
 
     if (!airports(routes).contains(arrival)) {
-      return Failure(InvalidAirport)
+      return Failure(InvalidAirport(arrival.iataCode))
     }
 
     if (arrival == departure) {
-      return Failure(DepartureEqualToArrival)
+      return Failure(DepartureEqualToArrival(departure.iataCode))
     }
 
     val graph = buildGraph(routes)
