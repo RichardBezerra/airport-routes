@@ -12,13 +12,17 @@ Because of these different point of views about the problem, the program cover e
 In this case, the problem is faced as a Directed Acyclic Graph (DAG). The program creates a DAG based on the provided routes. Then, it generates a Topological Order on top of that and traverse the topological order searching for the shortest path between the departure and arrival informed airports.
 
 ### Extending with returning routes
-In this case, the program duplicates each route creating a new route connecting same airports in the oposite direction as per picture below. So, the problem is faced as a Directed Cycle Graph. The program generates the graph from the extended routes an then applies a Dijkstra based algorithm able to find shortest paths in that kind of graph.
+In this case, the program duplicates each route creating a new route connecting same airports in the opposite direction as per picture below. So, the problem is faced as a Directed Cycle Graph. The program generates the graph from the extended routes an then applies a Dijkstra based algorithm able to find shortest paths in that kind of graph.
 
 ![Provided routes](doc/extended-routes.png)
 
 In order to run the program in this mode, a flag `with-returning-routes` should be informed as the third parameter after the airports. Then, paths like BKK -> ORD are made possible.
 
 ## How to execute
+
+Pre-Requisite: JRE 11 (it is likely to work on JRE 8 as well)
+
+Download artifact from the [pipeline](https://github.com/RichardBezerra/airport-routes/actions/runs/726158909) at https://github.com/RichardBezerra/airport-routes/actions/runs/726158909.
 
 - Default mode (with provided routes): `java -jar ./airport-routes-finder-0.1.jar DUB SYD`
 - Extended mode (with returning routes): `java -jar ./airport-routes-finder-0.1.jar DUB SYD with-returning-routes`
@@ -34,7 +38,7 @@ In order to run the program in this mode, a flag `with-returning-routes` should 
 1. ~~Error messages~~
 1. ~~Packaging~~
 1. ~~Documentation for Directed Cycle Graph improved.~~
+1. ~~Discuss approach (README)~~
+1. Performance tests
 1. Refine FP
 1. Fix topological parameters
-1. Discuss approach (README)
-1. Performance tests
