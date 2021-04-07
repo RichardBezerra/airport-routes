@@ -1,4 +1,4 @@
-name: Scala CI
+name: Pipeline CI
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  build and upload:
 
     runs-on: ubuntu-latest
 
