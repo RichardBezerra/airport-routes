@@ -22,7 +22,7 @@ In order to run the program in this mode, a flag `with-returning-routes` should 
 
 Pre-Requisite: JRE 11 (it is likely to work on JRE 8 as well)
 
-Download artifact from the [pipeline](https://github.com/RichardBezerra/airport-routes/actions/runs/726158909) at https://github.com/RichardBezerra/airport-routes/actions/runs/726158909.
+Download artifact from the [pipeline](https://github.com/RichardBezerra/airport-routes/actions/runs/727056867) at https://github.com/RichardBezerra/airport-routes/actions/runs/727056867.
 
 - Default mode (with provided routes): `java -jar ./airport-routes-finder-0.1.jar DUB SYD`
 - Extended mode (with returning routes): `java -jar ./airport-routes-finder-0.1.jar DUB SYD with-returning-routes`
