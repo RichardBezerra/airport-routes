@@ -2,7 +2,7 @@ name := "Airport Routes Finder"
 
 version := "0.1"
 
-assemblyJarName in assembly := "airport-routes-finder-0.1"
+assemblyJarName in assembly := "airport-routes-finder-0.1.jar"
 
 scalaVersion := "2.13.5"
 
