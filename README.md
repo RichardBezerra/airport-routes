@@ -9,10 +9,10 @@ The routes provided along with challenge description might impact the understand
 Because of these different point of views about the problem, the program cover each perspective with a different solution. Both solutions are built on top of graph algorithms.
 
 ### Assuming only the provided routes
-In this case, the problem is faced as a Directed Acyclic Graph (DAG). The program creates a DAG based on the provided routes. Then, generates a Topological Order on top of that and traverse the topological order searching for the shortest path between the departure and arrival informed airports.
+In this case, the problem is faced as a Directed Acyclic Graph (DAG). The program creates a DAG based on the provided routes. Then, it generates a Topological Order on top of that and traverse the topological order searching for the shortest path between the departure and arrival informed airports.
 
 ### Extending with returning routes
-In this case, the program duplicates each route creating a new route connecting same airports in the oposite direction as per picture below. So, the problem is faced as a Directed Cycle Graph. The program generates the graph from the extended routes an then apply a Dijkstra based algorithm able to find shortest paths in Directed Cycle Graphs.
+In this case, the program duplicates each route creating a new route connecting same airports in the oposite direction as per picture below. So, the problem is faced as a Directed Cycle Graph. The program generates the graph from the extended routes an then applies a Dijkstra based algorithm able to find shortest paths in that kind of graph.
 
 ![Provided routes](doc/extended-routes.png)
 
@@ -20,10 +20,12 @@ In order to run the program in this mode, a flag `with-returning-routes` should 
 
 ## How to execute
 
-- Default mode (with provided routes): `java -jar ./airport-routes-finder-0.1 DUB SYD`
-- Extended mode (with returning routes): `java -jar ./airport-routes-finder-0.1 DUB SYD with-returning-routes`
+- Default mode (with provided routes): `java -jar ./airport-routes-finder-0.1.jar DUB SYD`
+- Extended mode (with returning routes): `java -jar ./airport-routes-finder-0.1.jar DUB SYD with-returning-routes`
 
-## Tests/Examples
+## Tests
+### Unit tests
+### Manual tests
 
 
 ## TODO
