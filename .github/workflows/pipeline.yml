@@ -23,4 +23,4 @@ jobs:
     - name: Save Artifact
       uses: actions/upload-artifact@v2
       with:        
-        path: target/scala-2.13.5/airport-routes-finder-0.1.jar
+        path: target/scala-2.13/airport-routes-finder-0.1.jar
