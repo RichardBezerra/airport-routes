@@ -18,5 +18,9 @@ jobs:
       with:
         java-version: '11'
         distribution: 'adopt'
-    - name: Run tests
+    - name: Run tests and assembly
       run: sbt test assembly
+    - name: Save Artifact
+      uses: actions/upload-artifact@v2
+      with:        
+        path: target/scala-2.12.5/airport-routes-finder-0.1.jar
