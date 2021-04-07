@@ -26,7 +26,7 @@ object App {
         routes.foreach(r => println(s"${r.departure.iataCode} -- ${r.arrival.iataCode} (${r.durationHours})"))
         println(s"time: ${routes.map(_.durationHours).sum}")
 
-      case Failure(exception) => println(s"Error: $exception")
+      case Failure(exception) => println(s"Error: ${exception.getMessage}")
     }
   }
 }

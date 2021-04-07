@@ -65,7 +65,7 @@ class DirectedCycleGraphFinderTest extends AnyFlatSpec with Matchers {
       .findShortestPath(providedRoutes, Airport("LAS"), Airport("LAS"))
 
     path match {
-      case Failure(failure) => failure should be (DepartureEqualToArrival)
+      case Failure(failure) => failure shouldBe a [DepartureEqualToArrival]
       case Success(_) => fail()
     }
   }
@@ -76,7 +76,7 @@ class DirectedCycleGraphFinderTest extends AnyFlatSpec with Matchers {
       .findShortestPath(providedRoutes, Airport("SNN"), Airport("LAS"))
 
     path match {
-      case Failure(failure) => failure should be (InvalidAirport)
+      case Failure(failure) => failure shouldBe a [InvalidAirport]
       case Success(_) => fail()
     }
   }
@@ -87,7 +87,7 @@ class DirectedCycleGraphFinderTest extends AnyFlatSpec with Matchers {
       .findShortestPath(providedRoutes, Airport("LAS"), Airport("SNN"))
 
     path match {
-      case Failure(failure) => failure should be (InvalidAirport)
+      case Failure(failure) => failure shouldBe a [InvalidAirport]
       case Success(_) => fail()
     }
   }

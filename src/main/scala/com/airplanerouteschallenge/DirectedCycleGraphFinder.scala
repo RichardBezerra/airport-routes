@@ -18,8 +18,8 @@ trait DirectedCycleGraphFinder extends ShortestPathFinder {
 
     val allAirports = airports(availableRoutes)
 
-    if (!allAirports.contains(departure) || !allAirports.contains(arrival)) Failure(InvalidAirport)
-    else if (departure == arrival) Failure(DepartureEqualToArrival)
+    if (!allAirports.contains(departure) || !allAirports.contains(arrival)) Failure(InvalidAirport(departure.iataCode))
+    else if (departure == arrival) Failure(DepartureEqualToArrival(departure.iataCode))
     else {
       val graph = buildGraph(availableRoutes)
 
