@@ -19,7 +19,7 @@ jobs:
         java-version: '11'
         distribution: 'adopt'
     - name: Run tests and assembly
-      run: sbt test assembly
+      run: sbt assembly
     - run: ls -R
     - name: Save Artifact
       uses: actions/upload-artifact@v2
