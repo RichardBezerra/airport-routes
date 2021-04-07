@@ -98,12 +98,8 @@ class DirectedCycleGraphFinderTest extends AnyFlatSpec with Matchers {
 
     val allAirports = shortestPathFinderMock.airports(providedRoutes)
 
-    val hoursDistanceTracking = HoursTrack(allAirports)
-
-    hoursDistanceTracking.setDurationToZero(Airport("DUB"))
-
     // act
-    LazyDijkstra.fillHoursTrack(graph, allAirports, Airport("DUB"), Airport("LAS"), hoursDistanceTracking)
+    val hoursDistanceTracking = LazyDijkstra.fillHoursTrack(graph, allAirports, Airport("DUB"), Airport("LAS"))
 
     // assert
     hoursDistanceTracking(Airport("LAS")).routes should have size 2

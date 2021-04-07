@@ -36,11 +36,7 @@ trait DirectedCycleGraphFinder extends ShortestPathFinder {
     else {
       val graph = buildGraph(availableRoutes)
 
-      val hoursDistanceTracking = HoursTrack(allAirports)
-
-      hoursDistanceTracking.setDurationToZero(departure)
-
-      finder.fillHoursTrack(graph, allAirports, departure, arrival, hoursDistanceTracking)
+      val hoursDistanceTracking = finder.fillHoursTrack(graph, allAirports, departure, arrival)
 
       hoursDistanceTracking
         .get(arrival)
@@ -74,14 +70,13 @@ trait Dijkstra {
    * @param allAirports list of all airports in the graph.
    * @param departure origin of the path.
    * @param arrival destination of the path.
-   * @param hoursTrack mutable map that holds the shortest path from departure to other airports that gets
-   *                   passed through until destination is found.
+   * @return map that holds the shortest path from departure to other airports that gets
+   *         passed through until destination is found.
    */
   def fillHoursTrack(graph: Map[Airport, Seq[Route]],
                      allAirports: Set[Airport],
                      departure: Airport,
-                     arrival: Airport,
-                     hoursTrack: HoursTrack): Unit
+                     arrival: Airport): HoursTrack
 }
 
 /**
@@ -100,8 +95,11 @@ object LazyDijkstra extends Dijkstra {
   override def fillHoursTrack(graph: Map[Airport, Seq[Route]],
                               allAirports: Set[Airport],
                               departure: Airport,
-                              arrival: Airport,
-                              hoursTrack: HoursTrack): Unit = {
+                              arrival: Airport): HoursTrack = {
+
+    val hoursDistanceTracking = HoursTrack(allAirports)
+
+    hoursDistanceTracking.setDurationToZero(departure)
 
     priorityQueue.enqueue((departure, HoursTrackPathValue.notInitiated))
 
@@ -114,15 +112,15 @@ object LazyDijkstra extends Dijkstra {
       visitedAirports.put(currentRoute._1, true)
 
       val isDurationToArrivalFaster =
-        hoursTrack(currentRoute._1).totalDuration < currentRoute._2.totalDuration
+        hoursDistanceTracking(currentRoute._1).totalDuration < currentRoute._2.totalDuration
 
       if (!isDurationToArrivalFaster) {
 
         graph(currentRoute._1).foreach(route => {
           if (!visitedAirports(route.arrival)) {
-            val currentDurationAtDeparture = hoursTrack(currentRoute._1)
+            val currentDurationAtDeparture = hoursDistanceTracking(currentRoute._1)
 
-            hoursTrack
+            hoursDistanceTracking
               .overridePathToArrivalIfRouteIsFaster(currentDurationAtDeparture, route)
               .foreach(priorityQueue.enqueue(_))
           }
@@ -131,6 +129,8 @@ object LazyDijkstra extends Dijkstra {
         arrivalFound = currentRoute._1 == arrival
       }
     }
+
+    hoursDistanceTracking
   }
 }
 
