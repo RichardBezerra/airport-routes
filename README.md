@@ -26,19 +26,3 @@ Download artifact from the [pipeline](https://github.com/RichardBezerra/airport-
 
 - Default mode (with provided routes): `java -jar ./airport-routes-finder-0.1.jar DUB SYD`
 - Extended mode (with returning routes): `java -jar ./airport-routes-finder-0.1.jar DUB SYD with-returning-routes`
-
-## Tests
-### Unit tests
-### Manual tests
-
-
-## TODO
-1. ~~SSSP based on Topological Sorting~~
-1. ~~Expand initial options in the provided dataset~~
-1. ~~Error messages~~
-1. ~~Packaging~~
-1. ~~Documentation for Directed Cycle Graph improved.~~
-1. ~~Discuss approach (README)~~
-1. Performance tests
-1. Refine FP
-1. Fix topological parameters
