@@ -1,12 +1,11 @@
 # Airport Routes challenge
 
-## Approach
-### Problem analysis
+## Problem analysis
 The routes provided along with challenge description might impact the understanding of the problem. The provided routes cover only flights to same direction as per picture below.  So, considering only the routes, the problem is simpler than generic description. In the other side, considering that could exist routes connecting airports in both directions, the problem gets more complex.
 
 ![Provided routes](doc/provided-routes.png)
 
-### Two solutions
+## Two solutions
 Because of these different point of views about the problem, the program cover each perspective with a different solution. Both solutions are built on top of graph algorithms.
 
 ### Assuming only the provided routes
@@ -17,11 +16,14 @@ In this case, the program duplicates each route creating a new route connecting 
 
 ![Provided routes](doc/extended-routes.png)
 
-In order to run the program in this mode, a flag `with-returning-routes` should be informed as a third parameter after the airports. Then, paths like BKK -> ORD is made possible.
+In order to run the program in this mode, a flag `with-returning-routes` should be informed as the third parameter after the airports. Then, paths like BKK -> ORD are made possible.
 
-### FP
+## How to execute
 
-### Tests/Examples
+- Default mode (with provided routes): `java -jar ./airport-routes-finder-0.1 DUB SYD`
+- Extended mode (with returning routes): `java -jar ./airport-routes-finder-0.1 DUB SYD with-returning-routes`
+
+## Tests/Examples
 
 
 ## TODO
