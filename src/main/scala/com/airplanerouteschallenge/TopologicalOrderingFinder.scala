@@ -4,7 +4,7 @@ import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
 
 /**
- * Finds the shortest path by apply a topological ordering approach
+ * Finds the shortest path by applying a topological ordering approach
  * on the graph tha generated from the routes.
  * Then, uses it to find the shortest path from the departure airport.
  *
