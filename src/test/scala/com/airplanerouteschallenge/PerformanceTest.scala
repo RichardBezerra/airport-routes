@@ -5,7 +5,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
-import scala.util.{Success, Try}
+import scala.util.Success
 
 class PerformanceTest extends AnyFlatSpec with Matchers {
 
@@ -45,7 +45,7 @@ class PerformanceTest extends AnyFlatSpec with Matchers {
   }
 
   it should s"find the shortest path from DUB to SYD " +
-    s"in a graph with ${graphShapePlus10Times._1} vertices and ${graphShapePlus10Times._2} edges in less than 500 ms" in {
+    s"in a graph with ${graphShapePlus10Times._1} vertices and ${graphShapePlus10Times._2} edges in less than 200 ms" in {
     val initialTime = System.nanoTime()
 
     val graph = TopologicalOrderingFinder.buildGraph(plus10Times)
@@ -56,7 +56,7 @@ class PerformanceTest extends AnyFlatSpec with Matchers {
 
     val totalTimeMs = ((System.nanoTime() - initialTime) / 1000000).toInt
 
-    totalTimeMs should be < 500
+    totalTimeMs should be < 200
   }
 
   it should s"find the shortest path from DUB to SYD " +
