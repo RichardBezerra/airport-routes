@@ -1,7 +1,7 @@
 # Airport Routes challenge
 
 ## Problem analysis
-The routes provided along with challenge description might impact the understanding of the problem. The provided routes cover only flights to same direction as per picture below.  So, considering only the routes, the problem is simpler than generic description. In the other side, considering that could exist routes connecting airports in both directions, the problem gets more complex.
+The routes provided along with challenge description might impact the understanding of the problem. The provided routes cover only flights to same direction as per picture below.  So, considering only the routes, the problem is simpler than the generic description. In the other side, considering that could exist routes connecting airports in both directions, the problem gets more complex.
 
 ![Provided routes](doc/provided-routes.png)
 
