@@ -14,6 +14,9 @@ In this case, the problem is faced as a Directed Acyclic Graph (DAG). The progra
 ### Extending with returning routes
 In this case, the program duplicates each route creating a new route connecting same airports in the opposite direction as per picture below. So, the problem is faced as a Directed Cycle Graph. The program generates the graph from the extended routes an then applies a Dijkstra based algorithm able to find shortest paths in that kind of graph.
 
+### Functional Domain Design
+A functional domain design was used as fundation for implementing the graph algorithms on top of. The problem were declared as Scala trait and immutable objects. The solutions were created as Scala companion objects. However, some parts of algorithms used in both solutions rely on mutable data structures and because of that not all methods act as pure functions.
+
 ![Provided routes](doc/extended-routes.png)
 
 In order to run the program in this mode, a flag `with-returning-routes` should be informed as the third parameter after the airports. Then, paths like BKK -> ORD are made possible.
