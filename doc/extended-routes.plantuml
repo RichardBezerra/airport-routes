@@ -1,0 +1,47 @@
+@startuml
+left to right direction
+!include <archimate/Archimate>
+
+Rel_Triggering(DUB, LHR, 1)
+Rel_Serving(LHR, DUB, 1)
+
+Rel_Serving(DUB, CDG, 2)
+Rel_Serving(CDG, DUB, 2)
+
+Rel_Serving(CDG, BOS, 6)
+Rel_Serving(BOS, CDG, 6)
+
+Rel_Serving(CDG, BKK, 9)
+Rel_Serving(BKK, CDG, 9)
+
+Rel_Serving(ORD, LAS, 2)
+Rel_Serving(LAS, ORD, 2)
+
+Rel_Serving(LHR, NYC, 5)
+Rel_Serving(NYC, LHR, 5)
+
+Rel_Serving(NYC, LAS, 3)
+Rel_Serving(LAS, NYC, 3)
+
+Rel_Serving(BOS, LAX, 4)
+Rel_Serving(LAX, BOS, 4)
+
+Rel_Serving(LHR, BKK, 9)
+Rel_Serving(BKK, LHR, 9)
+
+Rel_Serving(BKK, SYD, 11)
+Rel_Serving(SYD, BKK, 11)
+
+Rel_Serving(LAX, LAS, 2)
+Rel_Serving(LAS, LAX, 2)
+
+Rel_Serving(DUB, ORD, 6)
+Rel_Serving(ORD, DUB, 6)
+
+Rel_Serving(LAX, SYD, 13)
+Rel_Serving(SYD, LAX, 13)
+
+Rel_Serving(LAS, SYD, 14)
+Rel_Serving(SYD, LAS, 14)
+
+@enduml
