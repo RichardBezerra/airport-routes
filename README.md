@@ -19,7 +19,7 @@ In this case, the program duplicates each route creating a new route connecting 
 In order to run the program in this mode, a flag `with-returning-routes` should be informed as the third parameter after the airports. Then, paths like BKK -> ORD are made possible.
 
 ### Functional Domain Design
-A functional domain design was used as fundation for implementing the graph algorithms on top of. The problem were declared as Scala trait and immutable objects. The solutions were created as Scala companion objects. However, some parts of algorithms used in both solutions rely on mutable data structures and because of that not all methods act as pure functions.
+A functional domain design was used as fundation for implementing the graph algorithms on top of. The problem were declared as Scala trait and immutable objects. The solutions were created as Scala companion objects. However, some parts of used algorithms rely on mutable data structures and because of that some methods does not run as pure functions.
 
 ## How to execute
 
